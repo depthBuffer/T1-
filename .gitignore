@@ -1,0 +1,10 @@
+#Folders
+build/*
+
+.vscode/*
+
+t1_math/build/*
+t1_math/.vscode/*
+
+
+
