@@ -2,7 +2,9 @@
 
 #include "test/test_vector.h"
 #include "test/test_matrix.h"
+#include "test/test_operations.h"
 #include "test/test_common.h"
+#include "test/test_transformations.h"
 
 // todo: check googletest for testing.
 
@@ -21,11 +23,19 @@ int main(int argc, char *argv[]) // arguments int to char
     TEST(MatrixConstruct);
     TEST(MatrixIndexing);
 
+    // run matrix/vector operations math tests
+    TEST(VectorOperation);
+    TEST(MatrixOperation);
+    TEST(VectorMatrixOperation);
+
 	// run common math tests
     TEST(LerpFunctions);
     TEST(ClampFunctions);
     TEST(RangeFunctions);
     TEST(StepFunctions);
+
+    // run transformations matrix/vector math tests
+    TEST(MatrixTransformation);
 
 	std::cout << std::endl;
 	if (TEST_SUCCESS)
