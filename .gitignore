@@ -6,5 +6,6 @@ build/*
 t1_math/build/*
 t1_math/.vscode/*
 
+t1_utility/build/*
 
 

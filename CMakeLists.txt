@@ -4,3 +4,4 @@ project(T1)
 set(CMAKE_CXX_STANDARD 14)
 
 add_subdirectory(t1_math)
+add_subdirectory(t1_utility)
