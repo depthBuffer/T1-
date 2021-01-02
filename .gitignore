@@ -3,6 +3,8 @@ build/*
 
 .vscode/*
 
+t1_engine/build/*
+
 t1_math/build/*
 t1_math/.vscode/*
 
