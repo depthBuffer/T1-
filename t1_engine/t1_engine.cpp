@@ -124,6 +124,12 @@ namespace T1
         } logMessage += "\n";
         logMessage += "\n";
 
-        Log::Message(logMessage, type == GL_DEBUG_TYPE_ERROR ? LOG_ERROR : LOG_WARNING);
+        // only log a message a maximum of 3 times (as it'll keep spamming the message queue with
+        // the same error message)
+        static unsigned int msgCount = 0;
+        if(msgCount++ < 3)
+        {
+            Log::Message(logMessage, type == GL_DEBUG_TYPE_ERROR ? LOG_ERROR : LOG_WARNING);
+        }
     }
 }
