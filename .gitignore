@@ -1,5 +1,7 @@
 #Folders
 build/*
+!build/shaders
+!build/textures
 
 .vscode/*
 
