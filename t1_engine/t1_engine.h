@@ -2,6 +2,7 @@
 #define T1_H
 
 #include "shading/shader.h"
+#include "shading/texture.h"
 
 #include "glad/glad.h"
 

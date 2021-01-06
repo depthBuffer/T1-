@@ -7,7 +7,11 @@ set(ALL_INCS ${ALL_INCS} ${PROJECT_SOURCE_DIR}/)
 add_library(t1_engine
   glad/glad.c
   resources/shader_loader.cpp
+  resources/texture_loader.cpp
+  stb/stb_image.cpp
   shading/shader.cpp
+  shading/Texture.cpp
+  stb/stb_image.cpp
   t1_engine.cpp
 )
 
