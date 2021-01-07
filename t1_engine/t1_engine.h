@@ -3,6 +3,7 @@
 
 #include "shading/shader.h"
 #include "shading/texture.h"
+#include "shading/texture_cube.h"
 
 #include "glad/glad.h"
 

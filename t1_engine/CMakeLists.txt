@@ -10,6 +10,7 @@ add_library(t1_engine
   resources/texture_loader.cpp
   stb/stb_image.cpp
   shading/shader.cpp
+  shading/texture_cube.cpp
   shading/Texture.cpp
   stb/stb_image.cpp
   t1_engine.cpp
