@@ -1,6 +1,7 @@
 #ifndef T1_H
 #define T1_H
 
+#include "mesh/mesh.h"
 #include "shading/shader.h"
 #include "shading/texture.h"
 #include "shading/texture_cube.h"
