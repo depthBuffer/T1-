@@ -2,6 +2,7 @@
 #define T1_H
 
 #include "mesh/mesh.h"
+#include "mesh/quad.h"
 #include "shading/shader.h"
 #include "shading/texture.h"
 #include "shading/texture_cube.h"
