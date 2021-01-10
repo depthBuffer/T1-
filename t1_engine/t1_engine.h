@@ -3,6 +3,8 @@
 
 #include "mesh/mesh.h"
 #include "mesh/quad.h"
+#include "mesh/cube.h"
+#include "mesh/plane.h"
 #include "shading/shader.h"
 #include "shading/texture.h"
 #include "shading/texture_cube.h"
