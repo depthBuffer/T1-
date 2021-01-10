@@ -10,6 +10,8 @@ add_library(t1_engine
   mesh/mesh.cpp
   mesh/plane.cpp
   mesh/quad.cpp
+  mesh/sphere.cpp
+  mesh/torus.cpp
   resources/shader_loader.cpp
   resources/texture_loader.cpp
   stb/stb_image.cpp

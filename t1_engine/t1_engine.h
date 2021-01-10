@@ -5,6 +5,8 @@
 #include "mesh/quad.h"
 #include "mesh/cube.h"
 #include "mesh/plane.h"
+#include "mesh/sphere.h"
+#include "mesh/torus.h"
 #include "shading/shader.h"
 #include "shading/texture.h"
 #include "shading/texture_cube.h"
