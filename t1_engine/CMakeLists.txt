@@ -6,6 +6,7 @@ set(ALL_INCS ${ALL_INCS} ${PROJECT_SOURCE_DIR}/)
 
 add_library(t1_engine
   glad/glad.c
+  mesh/circle.cpp
   mesh/cube.cpp
   mesh/mesh.cpp
   mesh/plane.cpp

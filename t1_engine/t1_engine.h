@@ -3,6 +3,8 @@
 
 #include "mesh/mesh.h"
 #include "mesh/quad.h"
+#include "mesh/circle.h"
+#include "mesh/line_strip.h"
 #include "mesh/cube.h"
 #include "mesh/plane.h"
 #include "mesh/sphere.h"
