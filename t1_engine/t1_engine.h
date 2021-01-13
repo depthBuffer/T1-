@@ -10,6 +10,7 @@
 #include "mesh/sphere.h"
 #include "mesh/torus.h"
 #include "shading/shader.h"
+#include "shading/material.h"
 #include "shading/texture.h"
 #include "shading/texture_cube.h"
 
