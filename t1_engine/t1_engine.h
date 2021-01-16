@@ -1,6 +1,7 @@
 #ifndef T1_H
 #define T1_H
 
+#include "camera/fly_camera.h"
 #include "mesh/mesh.h"
 #include "mesh/quad.h"
 #include "mesh/circle.h"

@@ -9,7 +9,12 @@
 #include <GLFW/glfw3.h>
 
 void keyFunc(GLFWwindow *window, int key, int scancode, int action, int mods);
+void mousePosFunc(GLFWwindow *window, double xpos, double ypos);
+void mouseScrollFunc(GLFWwindow*, double xoffset, double yoffset);
 
+T1::FlyCamera camera(math::vec3(0.0f, 1.0f, 5.0f), math::vec3(0.0f, 0.0f, -1.0f));
+float deltaTime     = 0.0f;
+float lastFrameTime = 0.0f;
 bool keysPressed[1024];
 bool keysActive[1024];
 bool wireframe = false;
@@ -53,20 +58,49 @@ int main(int argc, char *argv[])
             return -1;
         }
         glfwMakeContextCurrent(window);
+        //glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);  
 
         // register callbacks
         glfwSetKeyCallback(window, keyFunc);
+        glfwSetCursorPosCallback(window, mousePosFunc);
+        glfwSetScrollCallback(window, mouseScrollFunc);
 
+        int width, height;
+        glfwGetFramebufferSize(window, &width, &height);
     Log::Message("GLFW initialized", LOG_INIT);
 
     Log::Message("Initializing render system", LOG_INIT);
         T1::Init((GLADloadproc)glfwGetProcAddress);
     Log::Message("Render system initialized", LOG_INIT);
+    // configure camera
+    camera.SetPerspective(math::Deg2Rad(60.0f), (float)width / (float)height, 0.1f, 100.0f);
 
     while (!glfwWindowShouldClose(window))
     {
         glfwPollEvents();
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+        float currentFrameTime = glfwGetTime();
+        deltaTime     = currentFrameTime - lastFrameTime;
+        lastFrameTime = currentFrameTime;
+
+        {
+            if (keysPressed[GLFW_KEY_W] || keysPressed[GLFW_KEY_UP])
+                camera.InputKey(deltaTime, T1::CAMERA_FORWARD);
+            if (keysPressed[GLFW_KEY_S] || keysPressed[GLFW_KEY_DOWN])
+                camera.InputKey(deltaTime, T1::CAMERA_BACK);
+            if (keysPressed[GLFW_KEY_A] || keysPressed[GLFW_KEY_LEFT])
+                camera.InputKey(deltaTime, T1::CAMERA_LEFT);
+            if (keysPressed[GLFW_KEY_D] || keysPressed[GLFW_KEY_RIGHT])
+                camera.InputKey(deltaTime, T1::CAMERA_RIGHT);
+            if (keysPressed[GLFW_KEY_E])
+                camera.InputKey(deltaTime, T1::CAMERA_UP);
+            if (keysPressed[GLFW_KEY_Q])
+                camera.InputKey(deltaTime, T1::CAMERA_DOWN);
+
+            // update render logic
+            camera.Update(deltaTime);
+        }
         glfwSwapBuffers(window);
     }
 
@@ -90,4 +124,29 @@ void keyFunc(GLFWwindow *window, int key, int scancode, int action, int mods)
             keysActive[key] = false;
         }
     }
+}
+
+bool firstMouse = true;
+float lastX = 640.0f;
+float lastY = 360.0f;
+void mousePosFunc(GLFWwindow *window, double xpos, double ypos)
+{
+    if (firstMouse)
+    {
+        lastX = xpos;
+        lastY = ypos;
+        firstMouse = false;
+    }
+
+        float xoffset = xpos - lastX;
+        float yoffset = lastY - ypos;  // reversed since y-coordinates go from bottom to left
+
+        lastX = xpos;
+        lastY = ypos;
+        camera.InputMouse(xoffset, yoffset);
+}
+
+void mouseScrollFunc(GLFWwindow*, double xoffset, double yoffset)
+{
+    camera.InputScroll(xoffset, yoffset);
 }
