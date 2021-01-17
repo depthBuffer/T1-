@@ -14,6 +14,8 @@
 #include "shading/material.h"
 #include "shading/texture.h"
 #include "shading/texture_cube.h"
+#include "scene/scene.h"
+#include "scene/scene_node.h"
 
 #include "glad/glad.h"
 

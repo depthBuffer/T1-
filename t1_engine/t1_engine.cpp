@@ -70,6 +70,8 @@ namespace T1
 
     void Clean()
     {
+        // clean up all still stored scene nodes managed globally by static scene class
+        Scene::Clear();
     }
 
     // process OpenGL's debug output
