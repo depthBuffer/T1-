@@ -66,12 +66,15 @@ namespace T1
         }
         Log::Message("Debug output initialized.", LOG_INIT);
 
+        // then initialize T1's core component
+        Resources::Init();
     }
 
     void Clean()
     {
         // clean up all still stored scene nodes managed globally by static scene class
         Scene::Clear();
+        Resources::Clean();
     }
 
     // process OpenGL's debug output

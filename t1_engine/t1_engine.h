@@ -2,6 +2,7 @@
 #define T1_H
 
 #include "camera/fly_camera.h"
+#include "resources/resources.h"
 #include "mesh/mesh.h"
 #include "mesh/quad.h"
 #include "mesh/circle.h"
