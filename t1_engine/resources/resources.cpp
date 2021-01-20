@@ -63,7 +63,11 @@ namespace T1
         if (Resources::m_Textures.find(id) != Resources::m_Textures.end())
             return &Resources::m_Textures[id];
 
+        Log::Message("Loading texture file at: " + path + ".", LOG_INIT);
+
         Texture texture = TextureLoader::LoadTexture(path, target, format, srgb);
+
+        Log::Message("Succesfully loaded: " + path + ".", LOG_INIT);
 
         // make sure texture got properly loaded
         if (texture.Width > 0)
