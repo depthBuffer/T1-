@@ -16,6 +16,7 @@ add_library(t1_engine
   mesh/sphere.cpp
   mesh/torus.cpp
   renderer/command_buffer.cpp
+  renderer/gl_cache.cpp
   resources/resources.cpp
   resources/shader_loader.cpp
   resources/texture_loader.cpp
