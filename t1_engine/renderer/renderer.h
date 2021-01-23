@@ -1,0 +1,83 @@
+#ifndef T1_RENDERER_H
+#define T1_RENDERER_H
+
+#include <t1_math/linear_algebra/matrix.h>
+
+#include "command_buffer.h"
+#include "gl_cache.h"
+
+#include "../glad/glad.h"
+
+namespace T1
+{
+    /* 
+
+      Forward declare the types, s.t. we don't need to include the required header files here. 
+      Seeing as several objects throughout T1 will link to renderer.h we want to reduce as much 
+      unnecesary additional header code as much as possible (saves in compilation times). 
+
+    */
+    class Mesh;
+    class Material;
+    class Scene;
+    class SceneNode;
+    class Camera;
+    class RenderTarget;
+    class MaterialLibrary;
+
+    /*
+
+      The main renderer; responsible for maintaining a render buffer queue, providing the front 
+      push commands for filling the buffer, sorting the buffer, manage multiple render passes and 
+      render the buffer(s) accordingly.
+
+    */
+    class Renderer
+    {
+    public:
+    private:       
+        // render state
+        CommandBuffer* m_CommandBuffer {nullptr};
+        GLCache        m_GLCache;
+        math::vec2     m_RenderSize;
+
+        // materials
+        MaterialLibrary* m_MaterialLibrary{nullptr};
+
+        // camera
+        Camera*    m_Camera{nullptr};
+
+        // ubo
+        unsigned int m_GlobalUBO;
+
+    public:
+        Renderer();
+        ~Renderer();
+
+        void Init(GLADloadproc loadProcFunc);
+
+        void SetRenderSize(unsigned int width, unsigned int height);
+        math::vec2 GetRenderSize();
+
+        Camera* GetCamera();
+        void    SetCamera(Camera* camera);
+
+        // create either a deferred default material (based on default set of materials available (like glass)), or a custom material (with custom you have to supply your own shader)
+        Material* CreateMaterial(std::string base = "default"); // these don't have the custom flag set (default material has default state and uses checkerboard texture as albedo (and black metallic, half roughness, purple normal, white ao)
+        Material* CreateCustomMaterial(Shader* shader);         // these have the custom flag set (will be rendered in forward pass)
+
+        void PushRender(Mesh* mesh, Material* material, math::mat4 transform = math::mat4(), math::mat4 prevFrameTransform = math::mat4());
+        void PushRender(SceneNode* node);
+
+        void RenderPushedCommands();
+    private:
+        // renderer-specific logic for rendering a custom (forward-pass) command
+        void renderCustomCommand(RenderCommand* command, Camera* customCamera, bool updateGLSettings = true);
+        // minimal render logic to render a mesh 
+        void renderMesh(Mesh* mesh, Shader* shader);
+        // updates the global uniform buffer objects
+        void updateGlobalUBOs();
+    };
+}
+
+#endif

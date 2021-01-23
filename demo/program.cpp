@@ -12,6 +12,7 @@ void keyFunc(GLFWwindow *window, int key, int scancode, int action, int mods);
 void mousePosFunc(GLFWwindow *window, double xpos, double ypos);
 void mouseScrollFunc(GLFWwindow*, double xoffset, double yoffset);
 
+T1::Renderer* renderer;
 T1::FlyCamera camera(math::vec3(0.0f, 1.0f, 5.0f), math::vec3(0.0f, 0.0f, -1.0f));
 float deltaTime     = 0.0f;
 float lastFrameTime = 0.0f;
@@ -70,10 +71,35 @@ int main(int argc, char *argv[])
     Log::Message("GLFW initialized", LOG_INIT);
 
     Log::Message("Initializing render system", LOG_INIT);
-        T1::Init((GLADloadproc)glfwGetProcAddress);
+        renderer = T1::Init((GLADloadproc)glfwGetProcAddress);
+        renderer->SetRenderSize(width, height);
+        renderer->SetCamera(&camera);
     Log::Message("Render system initialized", LOG_INIT);
+
+    // basic shapes
+    T1::Plane plane(16, 16);
+    T1::Sphere sphere(64, 64);
+    T1::Torus torus(2.0f, 0.4f, 32, 32);
+    T1::Cube cube;
+
+    // material setup
+    T1::Material* matPbr = renderer->CreateMaterial();
     // configure camera
-    camera.SetPerspective(math::Deg2Rad(60.0f), (float)width / (float)height, 0.1f, 100.0f);
+    camera.SetPerspective(math::Deg2Rad(60.0f), renderer->GetRenderSize().x / renderer->GetRenderSize().y ,0.1f, 100.0f);
+
+    // scene setup
+    T1::SceneNode* mainTorus   = T1::Scene::MakeSceneNode(&torus, matPbr);
+    T1::SceneNode* secondTorus = T1::Scene::MakeSceneNode(&torus, matPbr);
+    T1::SceneNode* thirdTorus  = T1::Scene::MakeSceneNode(&torus, matPbr);
+
+    mainTorus->AddChild(secondTorus);
+    secondTorus->AddChild(thirdTorus);
+
+    mainTorus->SetScale(1.0f);
+    mainTorus->SetPosition(math::vec3(0.0f, 0.0f, -3.0));
+    secondTorus->SetScale(0.65f);
+    secondTorus->SetRotation(math::vec4(0.0, 1.0, 0.0, math::Deg2Rad(90.0)));
+    thirdTorus->SetScale(0.65f);
 
     while (!glfwWindowShouldClose(window))
     {
@@ -100,6 +126,19 @@ int main(int argc, char *argv[])
 
             // update render logic
             camera.Update(deltaTime);
+
+            mainTorus->SetRotation(math::vec4(math::vec3(1.0f, 0.0f, 0.0f), glfwGetTime() * 2.0));
+            secondTorus->SetRotation(math::vec4(math::vec3(0.0f, 1.0f, 0.0f), glfwGetTime() * 3.0));
+            thirdTorus->SetRotation(math::vec4(math::vec3(0.0f, 1.0f, 0.0f), glfwGetTime() * 4.0));
+        }
+
+        {
+            renderer->PushRender(mainTorus);
+        }
+
+        {
+            // request T1 to render all currently pushed commands
+            renderer->RenderPushedCommands();
         }
         glfwSwapBuffers(window);
     }

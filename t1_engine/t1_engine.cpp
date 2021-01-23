@@ -6,7 +6,9 @@ namespace T1
 {
     void APIENTRY glDebugOutput(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar *message, void *userParam);
 
-    void Init(GLADloadproc loadProcFunc)
+    // hold a pointer to the renderer so we can delete it during cleanup
+    Renderer* renderer;
+    Renderer* Init(GLADloadproc loadProcFunc)
     {
         /* 
 
@@ -27,7 +29,7 @@ namespace T1
         if (!gladLoadGLLoader(loadProcFunc))
         {
             Log::Message("Failed to initialize OpenGL context.", LOG_ERROR);
-            return;
+            return nullptr;
         }
         else
         {
@@ -68,10 +70,14 @@ namespace T1
 
         // then initialize T1's core component
         Resources::Init();
+        renderer = new Renderer();
+        renderer->Init(loadProcFunc);
+        return renderer;
     }
 
     void Clean()
     {
+        delete renderer;
         // clean up all still stored scene nodes managed globally by static scene class
         Scene::Clear();
         Resources::Clean();

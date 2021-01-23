@@ -1,6 +1,7 @@
 #ifndef T1_H
 #define T1_H
 
+#include "renderer/renderer.h"
 #include "camera/fly_camera.h"
 #include "resources/resources.h"
 #include "mesh/mesh.h"
@@ -30,7 +31,7 @@ namespace T1
       w/ GLAD.
 
     */
-    void Init(GLADloadproc loadProcFunc);
+    Renderer* Init(GLADloadproc loadProcFunc);
 
 
     // cleans up T1 of all resources that are no longer relevant.
