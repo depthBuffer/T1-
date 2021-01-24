@@ -3,6 +3,8 @@
 
 #include <t1_math/linear_algebra/matrix.h>
 
+#include "../lighting/point_light.h"
+#include "../lighting/directional_light.h"
 #include "command_buffer.h"
 #include "gl_cache.h"
 
@@ -41,6 +43,10 @@ namespace T1
         GLCache        m_GLCache;
         math::vec2     m_RenderSize;
 
+        // lighting
+        std::vector<DirectionalLight*> m_DirectionalLights;
+        std::vector<PointLight*>       m_PointLights;
+
         // materials
         MaterialLibrary* m_MaterialLibrary{nullptr};
 
@@ -68,6 +74,9 @@ namespace T1
 
         void PushRender(Mesh* mesh, Material* material, math::mat4 transform = math::mat4(), math::mat4 prevFrameTransform = math::mat4());
         void PushRender(SceneNode* node);
+
+        void AddLight(DirectionalLight *light);
+        void AddLight(PointLight       *light);        
 
         void RenderPushedCommands();
     private:

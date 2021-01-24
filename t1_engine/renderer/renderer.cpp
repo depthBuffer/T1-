@@ -119,6 +119,16 @@ namespace T1
         }
     }
     // ------------------------------------------------------------------------
+    void Renderer::AddLight(DirectionalLight* light)
+    {
+        m_DirectionalLights.push_back(light);
+    }
+    // ------------------------------------------------------------------------
+    void Renderer::AddLight(PointLight* light)
+    {
+        m_PointLights.push_back(light);
+    }
+    // ------------------------------------------------------------------------
     void Renderer::RenderPushedCommands()
     {      
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -244,5 +254,17 @@ namespace T1
         glBufferSubData(GL_UNIFORM_BUFFER, 256, sizeof(math::mat4), &m_Camera->View[0][0]); // TODO: make inv function in math library
         // scene data
         glBufferSubData(GL_UNIFORM_BUFFER, 320, sizeof(math::vec4), &m_Camera->Position[0]);
+        // lighting
+        unsigned int stride = 2 * sizeof(math::vec4);
+        for (unsigned int i = 0; i < m_DirectionalLights.size() && i < 4; ++i) // no more than 4 directional lights
+        {
+            glBufferSubData(GL_UNIFORM_BUFFER, 336 + i * stride,                      sizeof(math::vec4), &m_DirectionalLights[i]->Direction[0]);
+            glBufferSubData(GL_UNIFORM_BUFFER, 336 + i * stride + sizeof(math::vec4), sizeof(math::vec4), &m_DirectionalLights[i]->Color[0]);
+        }
+        for (unsigned int i = 0; i < m_PointLights.size() && i < 8; ++i) //  constrained to max 8 point lights in forward context
+        {
+            glBufferSubData(GL_UNIFORM_BUFFER, 464 + i * stride,                      sizeof(math::vec4), &m_PointLights[i]->Position[0]);
+            glBufferSubData(GL_UNIFORM_BUFFER, 464 + i * stride + sizeof(math::vec4), sizeof(math::vec4), &m_PointLights[i]->Color[0]);
+        }
     }
 }

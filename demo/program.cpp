@@ -101,6 +101,13 @@ int main(int argc, char *argv[])
     secondTorus->SetRotation(math::vec4(0.0, 1.0, 0.0, math::Deg2Rad(90.0)));
     thirdTorus->SetScale(0.65f);
 
+    // lighting
+    T1::DirectionalLight dirLight;
+    dirLight.Direction = math::vec3(-0.5f, -1.0f, -0.3f);
+    dirLight.Color = math::vec3(1.0f, 0.89f, 0.7f);
+    dirLight.Intensity = 5.0f;
+    renderer->AddLight(&dirLight);
+
     while (!glfwWindowShouldClose(window))
     {
         glfwPollEvents();
