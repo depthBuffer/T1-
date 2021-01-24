@@ -8,6 +8,7 @@
 
 #include <GLFW/glfw3.h>
 
+void framebufferSizeFunc(GLFWwindow *window, int width, int height);
 void keyFunc(GLFWwindow *window, int key, int scancode, int action, int mods);
 void mousePosFunc(GLFWwindow *window, double xpos, double ypos);
 void mouseScrollFunc(GLFWwindow*, double xoffset, double yoffset);
@@ -50,6 +51,7 @@ int main(int argc, char *argv[])
         glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
         glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
         glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, true);
+        glfwWindowHint(GLFW_RESIZABLE, true);
 
     
         GLFWwindow* window = glfwCreateWindow(1920, 1080, "T1", nullptr, nullptr);           
@@ -62,6 +64,7 @@ int main(int argc, char *argv[])
         //glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);  
 
         // register callbacks
+        glfwSetFramebufferSizeCallback(window, framebufferSizeFunc);
         glfwSetKeyCallback(window, keyFunc);
         glfwSetCursorPosCallback(window, mousePosFunc);
         glfwSetScrollCallback(window, mouseScrollFunc);
@@ -156,6 +159,12 @@ int main(int argc, char *argv[])
     glfwTerminate();
 
     return 0;
+}
+
+void framebufferSizeFunc(GLFWwindow *window, int width, int height)
+{
+    renderer->SetRenderSize(width, height);
+    camera.SetPerspective(math::Deg2Rad(60.0f), (float)width / (float)height, 0.1f, 100.0f);
 }
 
 void keyFunc(GLFWwindow *window, int key, int scancode, int action, int mods)
