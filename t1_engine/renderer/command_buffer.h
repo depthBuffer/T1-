@@ -39,6 +39,8 @@ namespace T1
 
         // clears the command buffer; usually done after issuing all the stored render commands.
         void Clear();
+        // sorts the command buffer; first by shader, then by texture bind.
+        void Sort();
 
         // returns the list of custom render commands per render target.
         std::vector<RenderCommand> GetCustomRenderCommands();

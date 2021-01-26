@@ -132,6 +132,8 @@ namespace T1
     void Renderer::RenderPushedCommands()
     {      
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        // sort all pushed render commands by heavy state-switches e.g. shader switches.
+        m_CommandBuffer->Sort();
 
         // update (global) uniform buffers
         updateGlobalUBOs();
