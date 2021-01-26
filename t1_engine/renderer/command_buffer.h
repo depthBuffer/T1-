@@ -40,6 +40,9 @@ namespace T1
         // clears the command buffer; usually done after issuing all the stored render commands.
         void Clear();
         // sorts the command buffer; first by shader, then by texture bind.
+        // TODO: build an approach using texture arrays (every push would add relevant material textures
+        // to texture array (if it wans't there already), and then add a texture index to each material
+        // slot; profile if the added texture adjustments actually saves performance!
         void Sort();
 
         // returns the list of custom render commands per render target.
