@@ -18,6 +18,7 @@ add_library(t1_engine
   renderer/command_buffer.cpp
   renderer/gl_cache.cpp
   renderer/MaterialLibrary.cpp
+  renderer/render_target.cpp
   renderer/renderer.cpp
   resources/resources.cpp
   resources/shader_loader.cpp

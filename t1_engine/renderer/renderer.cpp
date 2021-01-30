@@ -1,5 +1,6 @@
 #include "renderer.h"
 
+#include "render_target.h"
 #include "MaterialLibrary.h"
 
 #include "../mesh/mesh.h"
@@ -31,7 +32,11 @@ namespace T1
     {       
         delete m_CommandBuffer;
 
+        delete m_NDCPlane;
+
         delete m_MaterialLibrary;
+
+        delete m_CustomTarget;
     }
     // ------------------------------------------------------------------------
     void Renderer::Init(GLADloadproc loadProcFunc)
@@ -47,6 +52,10 @@ namespace T1
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         glClearDepth(1.0f);
 
+        m_NDCPlane = new Quad;
+
+        m_CustomTarget       = new RenderTarget(1, 1, GL_HALF_FLOAT, 1, true);
+
         // materials
         m_MaterialLibrary = new MaterialLibrary();
 
@@ -61,6 +70,8 @@ namespace T1
     {
         m_RenderSize.x = width;
         m_RenderSize.y = height;
+
+        m_CustomTarget->Resize(width, height);
     }
     // ------------------------------------------------------------------------
     math::vec2 Renderer::GetRenderSize()
@@ -145,17 +156,61 @@ namespace T1
         m_GLCache.SetDepthTest(true);
         m_GLCache.SetDepthFunc(GL_LESS);
 
-        // forward render pass
+        // forward render pass; render to our own target and blit that to the default framebuffer
         glViewport(0, 0, m_RenderSize.x, m_RenderSize.y);
+        glBindFramebuffer(GL_FRAMEBUFFER, m_CustomTarget->ID);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         std::vector<RenderCommand> renderCommands = m_CommandBuffer->GetCustomRenderCommands();
         for (unsigned int i = 0; i < renderCommands.size(); ++i)
         {
             renderCustomCommand(&renderCommands[i], nullptr);
         }
 
+        // blit to default framebuffer
+        Blit(m_CustomTarget->GetColorTexture(0));
+
         // clear the command buffer s.t. the next frame/call can start from an empty slate again.
         m_CommandBuffer->Clear();
     }
+    // ------------------------------------------------------------------------
+    void Renderer::Blit(Texture*      src,
+                        RenderTarget* dst, 
+                        Material*     material, 
+                        std::string   textureUniformName)
+    {
+        // if a destination target is given, bind to its framebuffer
+        if (dst)
+        {
+            glViewport(0, 0, dst->Width, dst->Height);
+            glBindFramebuffer(GL_FRAMEBUFFER, dst->ID);
+            if (dst->HasDepthAndStencil)
+                glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+            else
+                glClear(GL_COLOR_BUFFER_BIT);
+        }
+        // else we bind to the default framebuffer
+        else
+        {
+            glBindFramebuffer(GL_FRAMEBUFFER, 0);
+            glViewport(0, 0, m_RenderSize.x, m_RenderSize.y);
+            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+        }
+        // if no material is given, use default blit material
+        if (!material)
+        {
+            material = m_MaterialLibrary->defaultBlitMaterial;
+        }
+        // if a source render target is given, use its color buffer as input to material shader.
+        if (src)
+        {
+            material->SetTexture(textureUniformName, src, 0);
+        }
+        // render screen-space material to quad which will be displayed in dst's buffers.
+        RenderCommand command;
+        command.Material = material;
+        command.Mesh = m_NDCPlane;
+        renderCustomCommand(&command, nullptr);
+    }   
     // ------------------------------------------------------------------------
     void Renderer::renderCustomCommand(RenderCommand* command, Camera* customCamera, bool updateGLSettings)
     {

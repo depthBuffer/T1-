@@ -2,6 +2,7 @@
 #define T1_H
 
 #include "renderer/renderer.h"
+#include "renderer/render_target.h"
 #include "camera/fly_camera.h"
 #include "resources/resources.h"
 #include "mesh/mesh.h"

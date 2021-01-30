@@ -1,5 +1,6 @@
 #include "MaterialLibrary.h"
 
+#include "render_target.h"
 
 #include "../shading/material.h"
 #include "../resources/resources.h"
@@ -26,6 +27,7 @@ namespace T1
         {
             delete m_Materials[i];
         }
+        delete defaultBlitMaterial;
     }
     // --------------------------------------------------------------------------------------------
     Material* MaterialLibrary::CreateMaterial(std::string base)
@@ -68,5 +70,9 @@ namespace T1
     // --------------------------------------------------------------------------------------------
     void MaterialLibrary::generateInternalMaterials()
     {
+        // post-processing
+        Shader* defaultBlitShader = T1::Resources::LoadShader("blit", "shaders/screen_quad.vs", "shaders/default_blit.fs");
+        defaultBlitMaterial = new Material(defaultBlitShader);
+        
     }
 }

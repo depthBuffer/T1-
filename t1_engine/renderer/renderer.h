@@ -5,6 +5,7 @@
 
 #include "../lighting/point_light.h"
 #include "../lighting/directional_light.h"
+#include "../mesh/quad.h"
 #include "command_buffer.h"
 #include "gl_cache.h"
 
@@ -53,6 +54,10 @@ namespace T1
         // camera
         Camera*    m_Camera{nullptr};
 
+        // render-targets/post
+        RenderTarget*              m_CustomTarget {nullptr};
+        Quad*                      m_NDCPlane {nullptr};
+
         // ubo
         unsigned int m_GlobalUBO;
 
@@ -79,6 +84,8 @@ namespace T1
         void AddLight(PointLight       *light);        
 
         void RenderPushedCommands();
+
+        void Blit(Texture* src, RenderTarget* dst = nullptr, Material* material = nullptr, std::string textureUniformName = "TexSrc");
     private:
         // renderer-specific logic for rendering a custom (forward-pass) command
         void renderCustomCommand(RenderCommand* command, Camera* customCamera, bool updateGLSettings = true);

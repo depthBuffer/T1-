@@ -26,6 +26,8 @@ namespace T1
         // stores all generated/copied materials
         std::vector<Material*> m_Materials;
 
+        // internal render-specific materials
+        Material* defaultBlitMaterial;
     public:
         MaterialLibrary();
         ~MaterialLibrary();
