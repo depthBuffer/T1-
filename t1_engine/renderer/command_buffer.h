@@ -13,6 +13,7 @@ namespace T1
     class Renderer;
     class Mesh;
     class Material;
+    class RenderTarget;
 
     /* 
 
@@ -27,7 +28,7 @@ namespace T1
     private:
         Renderer* m_Renderer;
 
-        std::vector<RenderCommand> m_CustomRenderCommands;
+        std::map<RenderTarget*, std::vector<RenderCommand>> m_CustomRenderCommands;
 
 
     public:
@@ -35,7 +36,7 @@ namespace T1
         ~CommandBuffer(); 
             
         // pushes render state relevant to a single render call to the command buffer.
-        void Push(Mesh* mesh, Material* material, math::mat4 transform = math::mat4(), math::mat4 prevTransform = math::mat4());
+        void Push(Mesh* mesh, Material* material, math::mat4 transform = math::mat4(), math::mat4 prevTransform = math::mat4(), RenderTarget* target = nullptr);
 
         // clears the command buffer; usually done after issuing all the stored render commands.
         void Clear();
@@ -46,7 +47,7 @@ namespace T1
         void Sort();
 
         // returns the list of custom render commands per render target.
-        std::vector<RenderCommand> GetCustomRenderCommands();
+        std::vector<RenderCommand> GetCustomRenderCommands(RenderTarget *target);
     };
 }
 

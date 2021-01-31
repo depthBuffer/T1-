@@ -79,6 +79,19 @@ namespace T1
         return m_RenderSize;
     }
     // ------------------------------------------------------------------------
+    void Renderer::SetTarget(RenderTarget* renderTarget, GLenum target)
+    {
+        m_CurrentRenderTargetCustom = renderTarget;
+        if (renderTarget != nullptr) 
+        {
+            if (std::find(m_RenderTargetsCustom.begin(), m_RenderTargetsCustom.end(), renderTarget)
+                == m_RenderTargetsCustom.end())
+            {
+                m_RenderTargetsCustom.push_back(renderTarget);
+            }
+        }
+    }
+    // ------------------------------------------------------------------------
     Camera* Renderer::GetCamera()
     {
         return m_Camera;
@@ -101,8 +114,10 @@ namespace T1
     // ------------------------------------------------------------------------
     void Renderer::PushRender(Mesh* mesh, Material* material, math::mat4 transform, math::mat4 prevFrameTransform)
     {
+        // get current render target
+        RenderTarget* target = getCurrentRenderTarget();
         // don't render right away but push to the command buffer for later rendering.
-        m_CommandBuffer->Push(mesh, material, transform, prevFrameTransform);
+        m_CommandBuffer->Push(mesh, material, transform, prevFrameTransform, target);
     }
     // ------------------------------------------------------------------------
     void Renderer::PushRender(SceneNode* node)
@@ -110,6 +125,8 @@ namespace T1
         // update transform(s) before pushing node to render command buffer
         node->UpdateTransform(true);
 
+        // get current render target
+        RenderTarget* target = getCurrentRenderTarget();
         // traverse through all the scene nodes and for each node: push its render state to the 
         // command buffer together with a calculated transform matrix.
         std::stack<SceneNode*> nodeStack;
@@ -123,7 +140,7 @@ namespace T1
             // only push render command if the child isn't a container node.
             if (node->Mesh)
             {
-                 m_CommandBuffer->Push(node->Mesh, node->Material, node->GetTransform(), node->GetPrevTransform());
+                 m_CommandBuffer->Push(node->Mesh, node->Material, node->GetTransform(), node->GetPrevTransform(), target);
             }
             for(unsigned int i = 0; i < node->GetChildCount(); ++i)
                 nodeStack.push(node->GetChildByIndex(i));
@@ -156,14 +173,46 @@ namespace T1
         m_GLCache.SetDepthTest(true);
         m_GLCache.SetDepthFunc(GL_LESS);
 
-        // forward render pass; render to our own target and blit that to the default framebuffer
-        glViewport(0, 0, m_RenderSize.x, m_RenderSize.y);
         glBindFramebuffer(GL_FRAMEBUFFER, m_CustomTarget->ID);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        std::vector<RenderCommand> renderCommands = m_CommandBuffer->GetCustomRenderCommands();
-        for (unsigned int i = 0; i < renderCommands.size(); ++i)
+
+        // 6. custom forward render pass 
+        // push default render target to the end of the render target buffer s.t. we always render 
+        // the default buffer last.
+        m_RenderTargetsCustom.push_back(nullptr);        
+        for (unsigned int targetIndex = 0; targetIndex < m_RenderTargetsCustom.size(); ++targetIndex)
         {
-            renderCustomCommand(&renderCommands[i], nullptr);
+            RenderTarget *renderTarget = m_RenderTargetsCustom[targetIndex];
+            if (renderTarget)
+            {
+                glViewport(0, 0, renderTarget->Width, renderTarget->Height);
+                glBindFramebuffer(GL_FRAMEBUFFER, renderTarget->ID);
+                if (renderTarget->HasDepthAndStencil)
+                    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+                else
+                    glClear(GL_COLOR_BUFFER_BIT);
+                m_Camera->SetPerspective(m_Camera->FOV, 
+                                         (float)renderTarget->Width / (float)renderTarget->Height, 
+                                         0.1, 100.0f); 
+            }
+            else
+            {
+                // don't render to default framebuffer, but to custom target framebuffer which 
+                // we'll use for post-processing.
+                glViewport(0, 0, m_RenderSize.x, m_RenderSize.y);
+                glBindFramebuffer(GL_FRAMEBUFFER, m_CustomTarget->ID);
+                m_Camera->SetPerspective(m_Camera->FOV, m_RenderSize.x / m_RenderSize.y, 0.1, 
+                                         100.0f);
+            }
+
+            // sort all render commands and retrieve the sorted array
+            std::vector<RenderCommand> renderCommands = m_CommandBuffer->GetCustomRenderCommands(renderTarget);
+
+            // terate over all the render commands and execute
+            for (unsigned int i = 0; i < renderCommands.size(); ++i)
+            {
+                renderCustomCommand(&renderCommands[i], nullptr);
+            }
         }
 
         // blit to default framebuffer
@@ -171,6 +220,10 @@ namespace T1
 
         // clear the command buffer s.t. the next frame/call can start from an empty slate again.
         m_CommandBuffer->Clear();
+
+        // clear render state
+        m_RenderTargetsCustom.clear();
+        m_CurrentRenderTargetCustom = nullptr;
     }
     // ------------------------------------------------------------------------
     void Renderer::Blit(Texture*      src,
@@ -323,5 +376,10 @@ namespace T1
             glBufferSubData(GL_UNIFORM_BUFFER, 464 + i * stride,                      sizeof(math::vec4), &m_PointLights[i]->Position[0]);
             glBufferSubData(GL_UNIFORM_BUFFER, 464 + i * stride + sizeof(math::vec4), sizeof(math::vec4), &m_PointLights[i]->Color[0]);
         }
+    }
+    // --------------------------------------------------------------------------------------------
+    RenderTarget* Renderer::getCurrentRenderTarget()
+    {
+        return m_CurrentRenderTargetCustom;
     }
 }

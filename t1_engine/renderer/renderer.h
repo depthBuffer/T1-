@@ -55,6 +55,8 @@ namespace T1
         Camera*    m_Camera{nullptr};
 
         // render-targets/post
+        std::vector<RenderTarget*> m_RenderTargetsCustom;
+        RenderTarget*              m_CurrentRenderTargetCustom = nullptr;
         RenderTarget*              m_CustomTarget {nullptr};
         Quad*                      m_NDCPlane {nullptr};
 
@@ -69,6 +71,8 @@ namespace T1
 
         void SetRenderSize(unsigned int width, unsigned int height);
         math::vec2 GetRenderSize();
+
+        void SetTarget(RenderTarget* renderTarget, GLenum target = GL_TEXTURE_2D);
 
         Camera* GetCamera();
         void    SetCamera(Camera* camera);
@@ -93,6 +97,8 @@ namespace T1
         void renderMesh(Mesh* mesh, Shader* shader);
         // updates the global uniform buffer objects
         void updateGlobalUBOs();
+        // returns the currently active render target
+        RenderTarget* getCurrentRenderTarget();
     };
 }
 

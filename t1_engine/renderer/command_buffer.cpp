@@ -20,7 +20,7 @@ namespace T1
         Clear();
     }
     // --------------------------------------------------------------------------------------------
-    void CommandBuffer::Push(Mesh* mesh, Material* material, math::mat4 transform, math::mat4 prevTransform)
+    void CommandBuffer::Push(Mesh* mesh, Material* material, math::mat4 transform, math::mat4 prevTransform, RenderTarget* target)
     {
         RenderCommand command = {};
         command.Mesh          = mesh;
@@ -28,7 +28,15 @@ namespace T1
         command.Transform     = transform;
         command.PrevTransform = prevTransform;
 
-        m_CustomRenderCommands.push_back(command);
+        // check if this render target has been pushed before, if so add to vector,
+        // otherwise create new vector with this render target.
+        if (m_CustomRenderCommands.find(target) != m_CustomRenderCommands.end())
+            m_CustomRenderCommands[target].push_back(command);
+        else
+        {
+            m_CustomRenderCommands[target] = std::vector<RenderCommand>();
+            m_CustomRenderCommands[target].push_back(command);
+        }
     }
     // --------------------------------------------------------------------------------------------
     void CommandBuffer::Clear()
@@ -76,11 +84,14 @@ namespace T1
     // --------------------------------------------------------------------------------------------
     void CommandBuffer::Sort()
     {
-        std::sort(m_CustomRenderCommands.begin(), m_CustomRenderCommands.end(), renderSortCustom);
+        for (auto rtIt = m_CustomRenderCommands.begin(); rtIt != m_CustomRenderCommands.end(); rtIt++) 
+        {
+            std::sort(rtIt->second.begin(), rtIt->second.end(), renderSortCustom);
+        }
     }
     // --------------------------------------------------------------------------------------------
-    std::vector<RenderCommand> CommandBuffer::GetCustomRenderCommands()
+    std::vector<RenderCommand> CommandBuffer::GetCustomRenderCommands(RenderTarget *target)
     {
-        return m_CustomRenderCommands;
+        return m_CustomRenderCommands[target];
     }
 };
