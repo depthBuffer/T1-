@@ -5,6 +5,7 @@ set(CMAKE_CXX_STANDARD 14)
 set(ALL_INCS ${ALL_INCS} ${PROJECT_SOURCE_DIR}/)
 
 add_library(t1_engine
+  camera/camera_frustum.cpp
   camera/camera.cpp
   camera/fly_camera.cpp
   glad/glad.c

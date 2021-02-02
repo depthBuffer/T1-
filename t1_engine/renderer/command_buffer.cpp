@@ -1,6 +1,7 @@
 #include "command_buffer.h"
 
 #include "renderer.h"
+#include "../camera/camera.h"
 #include "../shading/material.h"
 #include "../mesh/mesh.h"
 
@@ -20,13 +21,15 @@ namespace T1
         Clear();
     }
     // --------------------------------------------------------------------------------------------
-    void CommandBuffer::Push(Mesh* mesh, Material* material, math::mat4 transform, math::mat4 prevTransform, RenderTarget* target)
+    void CommandBuffer::Push(Mesh* mesh, Material* material, math::mat4 transform, math::mat4 prevTransform, math::vec3 boxMin, math::vec3 boxMax, RenderTarget* target)
     {
         RenderCommand command = {};
         command.Mesh          = mesh;
         command.Material      = material;
         command.Transform     = transform;
         command.PrevTransform = prevTransform;
+        command.BoxMin        = boxMin;
+        command.BoxMax        = boxMax;
 
         // check if this render target has been pushed before, if so add to vector,
         // otherwise create new vector with this render target.
@@ -90,8 +93,24 @@ namespace T1
         }
     }
     // --------------------------------------------------------------------------------------------
-    std::vector<RenderCommand> CommandBuffer::GetCustomRenderCommands(RenderTarget *target)
+    std::vector<RenderCommand> CommandBuffer::GetCustomRenderCommands(RenderTarget *target, bool cull)
     {
-        return m_CustomRenderCommands[target];
+        // only cull when on main/null render target
+        if (target == nullptr && cull)
+        {
+            std::vector<RenderCommand> commands;
+            for (auto it = m_CustomRenderCommands[target].begin(); it != m_CustomRenderCommands[target].end(); ++it)
+            {
+                RenderCommand command = *it;
+                if (m_Renderer->GetCamera()->Frustum.Intersect(command.BoxMin, command.BoxMax)) {
+                    commands.push_back(command);
+                }
+            }
+            return commands;
+        }
+        else
+        {
+            return m_CustomRenderCommands[target];
+        }
     }
 };

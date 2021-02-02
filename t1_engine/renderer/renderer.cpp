@@ -117,7 +117,7 @@ namespace T1
         // get current render target
         RenderTarget* target = getCurrentRenderTarget();
         // don't render right away but push to the command buffer for later rendering.
-        m_CommandBuffer->Push(mesh, material, transform, prevFrameTransform, target);
+        m_CommandBuffer->Push(mesh, material, transform, prevFrameTransform, math::vec3(-99999.0f), math::vec3(99999.0f), target);
     }
     // ------------------------------------------------------------------------
     void Renderer::PushRender(SceneNode* node)
@@ -140,7 +140,9 @@ namespace T1
             // only push render command if the child isn't a container node.
             if (node->Mesh)
             {
-                 m_CommandBuffer->Push(node->Mesh, node->Material, node->GetTransform(), node->GetPrevTransform(), target);
+                math::vec3 boxMinWorld = node->GetWorldPosition() + (node->GetWorldScale() * node->BoxMin);
+                math::vec3 boxMaxWorld = node->GetWorldPosition() + (node->GetWorldScale() * node->BoxMax);
+                 m_CommandBuffer->Push(node->Mesh, node->Material, node->GetTransform(), node->GetPrevTransform(), boxMinWorld, boxMaxWorld, target);
             }
             for(unsigned int i = 0; i < node->GetChildCount(); ++i)
                 nodeStack.push(node->GetChildByIndex(i));

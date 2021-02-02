@@ -36,7 +36,7 @@ namespace T1
         ~CommandBuffer(); 
             
         // pushes render state relevant to a single render call to the command buffer.
-        void Push(Mesh* mesh, Material* material, math::mat4 transform = math::mat4(), math::mat4 prevTransform = math::mat4(), RenderTarget* target = nullptr);
+        void Push(Mesh* mesh, Material* material, math::mat4 transform = math::mat4(), math::mat4 prevTransform = math::mat4(), math::vec3 boxMin = math::vec3(-99999.0f), math::vec3 boxMax = math::vec3(99999.0f), RenderTarget* target = nullptr);
 
         // clears the command buffer; usually done after issuing all the stored render commands.
         void Clear();
@@ -47,7 +47,7 @@ namespace T1
         void Sort();
 
         // returns the list of custom render commands per render target.
-        std::vector<RenderCommand> GetCustomRenderCommands(RenderTarget *target);
+        std::vector<RenderCommand> GetCustomRenderCommands(RenderTarget *target, bool cull = false);
     };
 }
 
