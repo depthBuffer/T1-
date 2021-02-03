@@ -38,6 +38,8 @@ namespace T1
     class Renderer
     {
     public:
+        // configuration
+        bool RenderLights = true;
     private:       
         // render state
         CommandBuffer* m_CommandBuffer {nullptr};
@@ -62,6 +64,9 @@ namespace T1
 
         // ubo
         unsigned int m_GlobalUBO;
+
+        // debug
+        Mesh* m_DebugLightMesh {nullptr};
 
     public:
         Renderer();

@@ -27,6 +27,8 @@ namespace T1
         {
             delete m_Materials[i];
         }
+        delete debugLightMaterial;
+
         delete defaultBlitMaterial;
     }
     // --------------------------------------------------------------------------------------------
@@ -74,5 +76,9 @@ namespace T1
         Shader* defaultBlitShader = T1::Resources::LoadShader("blit", "shaders/screen_quad.vs", "shaders/default_blit.fs");
         defaultBlitMaterial = new Material(defaultBlitShader);
         
+
+        // debug
+        Shader *debugLightShader = Resources::LoadShader("debug light", "shaders/light.vs", "shaders/light.fs");
+        debugLightMaterial = new Material(debugLightShader);
     }
 }

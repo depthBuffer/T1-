@@ -28,6 +28,8 @@ namespace T1
 
         // internal render-specific materials
         Material* defaultBlitMaterial;
+
+        Material *debugLightMaterial;
     public:
         MaterialLibrary();
         ~MaterialLibrary();

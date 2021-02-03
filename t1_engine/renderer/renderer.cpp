@@ -37,6 +37,9 @@ namespace T1
         delete m_MaterialLibrary;
 
         delete m_CustomTarget;
+
+        // lighting
+        delete m_DebugLightMesh;
     }
     // ------------------------------------------------------------------------
     void Renderer::Init(GLADloadproc loadProcFunc)
@@ -55,6 +58,9 @@ namespace T1
         m_NDCPlane = new Quad;
 
         m_CustomTarget       = new RenderTarget(1, 1, GL_HALF_FLOAT, 1, true);
+
+        // lights
+        m_DebugLightMesh    = new Sphere(16, 16);
 
         // materials
         m_MaterialLibrary = new MaterialLibrary();
@@ -214,6 +220,28 @@ namespace T1
             for (unsigned int i = 0; i < renderCommands.size(); ++i)
             {
                 renderCustomCommand(&renderCommands[i], nullptr);
+            }
+        }
+
+        // render light mesh (as visual cue), if requested
+        for (auto it = m_PointLights.begin(); it != m_PointLights.end(); ++it)
+        {
+            if ((*it)->RenderMesh)
+            {
+                m_MaterialLibrary->debugLightMaterial->SetVector("lightColor", (*it)->Color * (*it)->Intensity * 0.25f);
+
+                RenderCommand command;
+                command.Material = m_MaterialLibrary->debugLightMaterial;
+                command.Mesh = m_DebugLightMesh;
+                math::mat4 model;
+                math::translate(model, (*it)->Position);
+                
+                math::vec3 scalar = math::vec3(0.25f);
+
+                math::scale(model, scalar);
+                command.Transform = model;
+
+                renderCustomCommand(&command, nullptr);
             }
         }
 
