@@ -232,6 +232,8 @@ namespace T1
         m_GBuffer->GetColorTexture(1)->Bind(1);
         m_GBuffer->GetColorTexture(2)->Bind(2);
         
+        // ambient lighting
+        renderDeferredAmbient();
 
         m_GLCache.SetDepthTest(true);
         m_GLCache.SetBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
@@ -464,5 +466,12 @@ namespace T1
     RenderTarget* Renderer::getCurrentRenderTarget()
     {
         return m_CurrentRenderTargetCustom;
+    }
+    // --------------------------------------------------------------------------------------------
+    void Renderer::renderDeferredAmbient()
+    {
+        Shader* ambientShader = m_MaterialLibrary->deferredAmbientShader;
+        ambientShader->Use();
+        renderMesh(m_NDCPlane, ambientShader);
     }
 }

@@ -30,6 +30,8 @@ namespace T1
         // internal render-specific materials
         Material* defaultBlitMaterial;
 
+        Shader* deferredAmbientShader;
+
         Material *debugLightMaterial;
     public:
         MaterialLibrary(RenderTarget *gBuffer);

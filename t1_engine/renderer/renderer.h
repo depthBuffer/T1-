@@ -105,6 +105,10 @@ namespace T1
         void updateGlobalUBOs();
         // returns the currently active render target
         RenderTarget* getCurrentRenderTarget();
+
+        // deferred logic:
+        // renders all ambient lighting (including indirect IBL)
+        void renderDeferredAmbient();
     };
 }
 

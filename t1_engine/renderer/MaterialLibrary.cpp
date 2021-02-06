@@ -76,6 +76,13 @@ namespace T1
         Shader* defaultBlitShader = T1::Resources::LoadShader("blit", "shaders/screen_quad.vs", "shaders/default_blit.fs");
         defaultBlitMaterial = new Material(defaultBlitShader);
         
+        // deferred
+        deferredAmbientShader     = T1::Resources::LoadShader("deferred ambient", "shaders/deferred/screen_ambient.vs", "shaders/deferred/ambient.fs");
+
+        deferredAmbientShader->Use();
+        deferredAmbientShader->SetInt("gPositionMetallic", 0);
+        deferredAmbientShader->SetInt("gNormalRoughness", 1);
+        deferredAmbientShader->SetInt("gAlbedoAO", 2);
 
         // debug
         Shader *debugLightShader = Resources::LoadShader("debug light", "shaders/light.vs", "shaders/light.fs");
