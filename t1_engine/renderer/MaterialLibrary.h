@@ -10,6 +10,7 @@ namespace T1
     class Material;
     class Renderer;
     class Shader;
+    class RenderTarget;
 
     /*
 
@@ -31,7 +32,7 @@ namespace T1
 
         Material *debugLightMaterial;
     public:
-        MaterialLibrary();
+        MaterialLibrary(RenderTarget *gBuffer);
         ~MaterialLibrary();
 
         // create either a deferred default material (based on default set of materials available (like glass)), or a custom material (with custom you have to supply your own shader)
@@ -41,7 +42,7 @@ namespace T1
         // generate all default template materials
         void generateDefaultMaterials();
         // generate all internal materials used by the renderer; run in MaterialLibrary to improve readability.
-        void generateInternalMaterials();
+        void generateInternalMaterials(RenderTarget *gBuffer);
     };
 }
 

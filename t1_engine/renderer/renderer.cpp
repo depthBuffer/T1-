@@ -36,6 +36,7 @@ namespace T1
 
         delete m_MaterialLibrary;
 
+        delete m_GBuffer;
         delete m_CustomTarget;
 
         // lighting
@@ -62,8 +63,11 @@ namespace T1
         // lights
         m_DebugLightMesh    = new Sphere(16, 16);
 
+        // deferred renderer
+        m_GBuffer = new RenderTarget(1, 1, GL_HALF_FLOAT, 4, true);
+
         // materials
-        m_MaterialLibrary = new MaterialLibrary();
+        m_MaterialLibrary = new MaterialLibrary(m_GBuffer);
 
         // ubo
         glGenBuffers(1, &m_GlobalUBO);
@@ -76,6 +80,8 @@ namespace T1
     {
         m_RenderSize.x = width;
         m_RenderSize.y = height;
+
+        m_GBuffer->Resize(width, height);
 
         m_CustomTarget->Resize(width, height);
     }
@@ -168,6 +174,25 @@ namespace T1
     void Renderer::RenderPushedCommands()
     {      
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+        /* 
+        
+          General outline of all the render steps/passes:
+          - First we render all pushed geometry to the GBuffer.
+          - We then render all shadow casting geometry to the shadow buffer.
+          - Pre-lighting post-processing steps.
+          - Deferred lighting pass (ambient, directional, point).
+          - Process deferred data s.t. forward pass is neatly integrated with deferred pass.
+          - Then we do the forward 'custom' rendering pass where developers can write their 
+            own shaders and render stuff as they want, not sacrifcing flexibility; this 
+            includes custom render targets.
+          - Then we render all alpha blended materials last.
+          - Then we do post-processing, one can supply their own post-processing materials 
+            by setting the 'post-processing' flag of the material.
+            Each material flagged as post-processing will run after the default post-processing 
+            shaders (before/after HDR-tonemap/gamma-correct).
+
+        */
         // sort all pushed render commands by heavy state-switches e.g. shader switches.
         m_CommandBuffer->Sort();
 
@@ -181,8 +206,36 @@ namespace T1
         m_GLCache.SetDepthTest(true);
         m_GLCache.SetDepthFunc(GL_LESS);
 
-        glBindFramebuffer(GL_FRAMEBUFFER, m_CustomTarget->ID);
+        // 1. Geometry buffer
+        std::vector<RenderCommand> deferredRenderCommands = m_CommandBuffer->GetDeferredRenderCommands(true);
+        glViewport(0, 0, m_RenderSize.x, m_RenderSize.y);
+        glBindFramebuffer(GL_FRAMEBUFFER, m_GBuffer->ID);
+        unsigned int attachments[4] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2, GL_COLOR_ATTACHMENT3 };
+        glDrawBuffers(4, attachments);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        for (unsigned int i = 0; i < deferredRenderCommands.size(); ++i)
+        {
+            renderCustomCommand(&deferredRenderCommands[i], nullptr, false);
+        }
+
+        glBindFramebuffer(GL_FRAMEBUFFER, m_CustomTarget->ID);
+        glViewport(0, 0, m_CustomTarget->Width, m_CustomTarget->Height);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+
+        // 4. Render deferred shader for each light (full quad for directional, spheres for point lights)
+        m_GLCache.SetDepthTest(false);
+        m_GLCache.SetBlend(true);
+        m_GLCache.SetBlendFunc(GL_ONE, GL_ONE);
+
+        // bind gbuffer
+        m_GBuffer->GetColorTexture(0)->Bind(0);
+        m_GBuffer->GetColorTexture(1)->Bind(1);
+        m_GBuffer->GetColorTexture(2)->Bind(2);
+        
+
+        m_GLCache.SetDepthTest(true);
+        m_GLCache.SetBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+        m_GLCache.SetBlend(false);
 
         // 6. custom forward render pass 
         // push default render target to the end of the render target buffer s.t. we always render 

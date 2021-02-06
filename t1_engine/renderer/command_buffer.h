@@ -28,6 +28,7 @@ namespace T1
     private:
         Renderer* m_Renderer;
 
+        std::vector<RenderCommand> m_DeferredRenderCommands;
         std::map<RenderTarget*, std::vector<RenderCommand>> m_CustomRenderCommands;
 
 
@@ -45,6 +46,10 @@ namespace T1
         // to texture array (if it wans't there already), and then add a texture index to each material
         // slot; profile if the added texture adjustments actually saves performance!
         void Sort();
+
+        // returns the list of render commands. For minimizing state changes it is advised to first 
+        // call Sort() before retrieving and issuing the render commands.
+        std::vector<RenderCommand> GetDeferredRenderCommands(bool cull = false);
 
         // returns the list of custom render commands per render target.
         std::vector<RenderCommand> GetCustomRenderCommands(RenderTarget *target, bool cull = false);

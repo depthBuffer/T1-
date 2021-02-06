@@ -31,22 +31,36 @@ namespace T1
         command.BoxMin        = boxMin;
         command.BoxMax        = boxMax;
 
-        // check if this render target has been pushed before, if so add to vector,
-        // otherwise create new vector with this render target.
-        if (m_CustomRenderCommands.find(target) != m_CustomRenderCommands.end())
-            m_CustomRenderCommands[target].push_back(command);
-        else
+        // check the type of the material and process differently where necessary
+        if (material->Type == MATERIAL_DEFAULT)
         {
-            m_CustomRenderCommands[target] = std::vector<RenderCommand>();
-            m_CustomRenderCommands[target].push_back(command);
+            m_DeferredRenderCommands.push_back(command);
+        }
+        else if (material->Type == MATERIAL_CUSTOM)
+        {
+            // check if this render target has been pushed before, if so add to vector,
+            // otherwise create new vector with this render target.
+            if (m_CustomRenderCommands.find(target) != m_CustomRenderCommands.end())
+                m_CustomRenderCommands[target].push_back(command);
+            else
+            {
+                m_CustomRenderCommands[target] = std::vector<RenderCommand>();
+                m_CustomRenderCommands[target].push_back(command);
+            }
         }
     }
     // --------------------------------------------------------------------------------------------
     void CommandBuffer::Clear()
     {
+        m_DeferredRenderCommands.clear();
         m_CustomRenderCommands.clear();
     }
     // --------------------------------------------------------------------------------------------
+    // custom per-element sort compare function used by the CommandBuffer::Sort() function.
+    bool renderSortDeferred(const RenderCommand &a, const RenderCommand &b)
+    {
+        return a.Material->GetShader()->ID < b.Material->GetShader()->ID;
+    }
     // sort render state
     bool renderSortCustom(const RenderCommand &a, const RenderCommand &b)
     {       
@@ -87,9 +101,30 @@ namespace T1
     // --------------------------------------------------------------------------------------------
     void CommandBuffer::Sort()
     {
+        std::sort(m_DeferredRenderCommands.begin(), m_DeferredRenderCommands.end(), renderSortDeferred);
         for (auto rtIt = m_CustomRenderCommands.begin(); rtIt != m_CustomRenderCommands.end(); rtIt++) 
         {
             std::sort(rtIt->second.begin(), rtIt->second.end(), renderSortCustom);
+        }
+    }
+    // --------------------------------------------------------------------------------------------
+    std::vector<RenderCommand> CommandBuffer::GetDeferredRenderCommands(bool cull)
+    {
+        if (cull)
+        {
+            std::vector<RenderCommand> commands;
+            for (auto it = m_DeferredRenderCommands.begin(); it != m_DeferredRenderCommands.end(); ++it)
+            {
+                RenderCommand command = *it;
+                if (m_Renderer->GetCamera()->Frustum.Intersect(command.BoxMin, command.BoxMax)) {
+                    commands.push_back(command);
+                }
+            }
+            return commands;
+        }
+        else
+        {
+            return m_DeferredRenderCommands;
         }
     }
     // --------------------------------------------------------------------------------------------

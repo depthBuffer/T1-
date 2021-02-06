@@ -11,10 +11,10 @@
 namespace T1
 {
     // --------------------------------------------------------------------------------------------
-    MaterialLibrary::MaterialLibrary()
+    MaterialLibrary::MaterialLibrary(RenderTarget* gBuffer)
     {
         generateDefaultMaterials();
-        generateInternalMaterials();
+        generateInternalMaterials(gBuffer);
     }
     // --------------------------------------------------------------------------------------------
     MaterialLibrary::~MaterialLibrary()
@@ -59,18 +59,18 @@ namespace T1
     // --------------------------------------------------------------------------------------------    
     void MaterialLibrary::generateDefaultMaterials()
     {
-        // default render material (forward for now)
-        Shader* defaultShader = Resources::LoadShader("default", "shaders/forward_render.vs", "shaders/forward_render.fs");
+        // default render material (deferred path)
+        Shader* defaultShader = Resources::LoadShader("default", "shaders/deferred/g_buffer.vs", "shaders/deferred/g_buffer.fs");
         Material* defaultMat = new Material(defaultShader);
-        defaultMat->Type = MATERIAL_CUSTOM;
-        defaultMat->SetTexture("TexAlbedo", Resources::LoadTexture("default albedo", "textures/checkerboard.png", GL_TEXTURE_2D, GL_RGB), 0);
-        defaultMat->SetTexture("TexNormal", Resources::LoadTexture("default normal", "textures/norm.png"), 1);
-        defaultMat->SetTexture("TexMetallic", Resources::LoadTexture("default metallic", "textures/black.png"), 2);
-        defaultMat->SetTexture("TexRoughness", Resources::LoadTexture("default roughness", "textures/checkerboard.png"), 3);
+        defaultMat->Type = MATERIAL_DEFAULT;
+        defaultMat->SetTexture("TexAlbedo", Resources::LoadTexture("default albedo", "textures/checkerboard.png", GL_TEXTURE_2D, GL_RGB), 3);
+        defaultMat->SetTexture("TexNormal", Resources::LoadTexture("default normal", "textures/norm.png"), 4);
+        defaultMat->SetTexture("TexMetallic", Resources::LoadTexture("default metallic", "textures/black.png"), 5);
+        defaultMat->SetTexture("TexRoughness", Resources::LoadTexture("default roughness", "textures/checkerboard.png"), 6);
         m_DefaultMaterials[SID("default")] = defaultMat;
     }
     // --------------------------------------------------------------------------------------------
-    void MaterialLibrary::generateInternalMaterials()
+    void MaterialLibrary::generateInternalMaterials(RenderTarget *gBuffer)
     {
         // post-processing
         Shader* defaultBlitShader = T1::Resources::LoadShader("blit", "shaders/screen_quad.vs", "shaders/default_blit.fs");

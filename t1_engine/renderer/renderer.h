@@ -49,6 +49,7 @@ namespace T1
         // lighting
         std::vector<DirectionalLight*> m_DirectionalLights;
         std::vector<PointLight*>       m_PointLights;
+        RenderTarget* m_GBuffer = nullptr;
 
         // materials
         MaterialLibrary* m_MaterialLibrary{nullptr};
