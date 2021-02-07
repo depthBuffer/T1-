@@ -39,6 +39,7 @@ namespace T1
     {
     public:
         // configuration
+        bool Lights       = true;
         bool RenderLights = true;
     private:       
         // render state
@@ -109,6 +110,8 @@ namespace T1
         // deferred logic:
         // renders all ambient lighting (including indirect IBL)
         void renderDeferredAmbient();
+        // render directional light
+        void renderDeferredDirLight(DirectionalLight* light);
     };
 }
 

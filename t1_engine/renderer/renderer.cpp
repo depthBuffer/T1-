@@ -235,6 +235,15 @@ namespace T1
         // ambient lighting
         renderDeferredAmbient();
 
+        if (Lights)
+        {
+            // directional lights
+            for (auto it = m_DirectionalLights.begin(); it != m_DirectionalLights.end(); ++it)
+            {
+                renderDeferredDirLight(*it);
+            }
+        }
+
         m_GLCache.SetDepthTest(true);
         m_GLCache.SetBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
         m_GLCache.SetBlend(false);
@@ -473,5 +482,17 @@ namespace T1
         Shader* ambientShader = m_MaterialLibrary->deferredAmbientShader;
         ambientShader->Use();
         renderMesh(m_NDCPlane, ambientShader);
+    }
+    // --------------------------------------------------------------------------------------------
+    void Renderer::renderDeferredDirLight(DirectionalLight* light)
+    {
+        Shader* dirShader = m_MaterialLibrary->deferredDirectionalShader;
+
+        dirShader->Use();
+        dirShader->SetVector("camPos", m_Camera->Position);
+        dirShader->SetVector("lightDir", light->Direction);
+        dirShader->SetVector("lightColor", math::normalize(light->Color) * light->Intensity); 
+            
+        renderMesh(m_NDCPlane, dirShader);
     }
 }

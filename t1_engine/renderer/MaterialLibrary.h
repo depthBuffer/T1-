@@ -31,6 +31,7 @@ namespace T1
         Material* defaultBlitMaterial;
 
         Shader* deferredAmbientShader;
+        Shader* deferredDirectionalShader;
 
         Material *debugLightMaterial;
     public:
