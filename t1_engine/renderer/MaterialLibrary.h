@@ -32,6 +32,7 @@ namespace T1
 
         Shader* deferredAmbientShader;
         Shader* deferredDirectionalShader;
+        Shader* deferredPointShader;
 
         Material *debugLightMaterial;
     public:

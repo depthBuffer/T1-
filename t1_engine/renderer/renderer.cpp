@@ -62,6 +62,7 @@ namespace T1
 
         // lights
         m_DebugLightMesh    = new Sphere(16, 16);
+        m_DeferredPointMesh = new Sphere(16, 16);
 
         // deferred renderer
         m_GBuffer = new RenderTarget(1, 1, GL_HALF_FLOAT, 4, true);
@@ -241,6 +242,11 @@ namespace T1
             for (auto it = m_DirectionalLights.begin(); it != m_DirectionalLights.end(); ++it)
             {
                 renderDeferredDirLight(*it);
+            }
+            // point lights
+            for (auto it = m_PointLights.begin(); it != m_PointLights.end(); ++it)
+            {
+                renderDeferredPointLight(*it);
             }
         }
 
@@ -494,5 +500,26 @@ namespace T1
         dirShader->SetVector("lightColor", math::normalize(light->Color) * light->Intensity); 
             
         renderMesh(m_NDCPlane, dirShader);
+    }
+    // --------------------------------------------------------------------------------------------
+    void Renderer::renderDeferredPointLight(PointLight* light)
+    {
+        Shader *pointShader = m_MaterialLibrary->deferredPointShader;
+
+        pointShader->Use();
+        pointShader->SetVector("camPos", m_Camera->Position);
+        pointShader->SetVector("lightPos", light->Position);
+        pointShader->SetFloat("lightRadius", light->Radius);
+        pointShader->SetVector("lightColor", math::normalize(light->Color) * light->Intensity);
+
+        math::mat4 model;
+        math::translate(model, light->Position);
+
+        math::vec3 scalar = math::vec3(light->Radius);
+
+        math::scale(model, scalar);
+        pointShader->SetMatrix("model", model);
+
+        renderMesh(m_DeferredPointMesh, pointShader);    
     }
 }

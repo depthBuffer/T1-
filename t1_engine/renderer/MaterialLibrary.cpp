@@ -79,6 +79,7 @@ namespace T1
         // deferred
         deferredAmbientShader     = T1::Resources::LoadShader("deferred ambient", "shaders/deferred/screen_ambient.vs", "shaders/deferred/ambient.fs");
         deferredDirectionalShader = T1::Resources::LoadShader("deferred directional", "shaders/deferred/screen_directional.vs", "shaders/deferred/directional.fs");
+        deferredPointShader       = T1::Resources::LoadShader("deferred point", "shaders/deferred/point.vs", "shaders/deferred/point.fs");
 
         deferredAmbientShader->Use();
         deferredAmbientShader->SetInt("gPositionMetallic", 0);
@@ -88,6 +89,10 @@ namespace T1
         deferredDirectionalShader->SetInt("gPositionMetallic", 0);
         deferredDirectionalShader->SetInt("gNormalRoughness", 1);
         deferredDirectionalShader->SetInt("gAlbedoAO", 2);
+        deferredPointShader->Use();
+        deferredPointShader->SetInt("gPositionMetallic", 0);
+        deferredPointShader->SetInt("gNormalRoughness", 1);
+        deferredPointShader->SetInt("gAlbedoAO", 2);
 
         // debug
         Shader *debugLightShader = Resources::LoadShader("debug light", "shaders/light.vs", "shaders/light.fs");

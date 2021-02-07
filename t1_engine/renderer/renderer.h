@@ -51,6 +51,7 @@ namespace T1
         std::vector<DirectionalLight*> m_DirectionalLights;
         std::vector<PointLight*>       m_PointLights;
         RenderTarget* m_GBuffer = nullptr;
+        Mesh*         m_DeferredPointMesh;
 
         // materials
         MaterialLibrary* m_MaterialLibrary{nullptr};
@@ -112,6 +113,8 @@ namespace T1
         void renderDeferredAmbient();
         // render directional light
         void renderDeferredDirLight(DirectionalLight* light);
+        // render point light
+        void renderDeferredPointLight(PointLight* light);
     };
 }
 
