@@ -256,6 +256,13 @@ namespace T1
         m_GLCache.SetBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
         m_GLCache.SetBlend(false);
 
+        // 5. blit depth buffer to default for forward rendering
+        glBindFramebuffer(GL_READ_FRAMEBUFFER, m_GBuffer->ID);
+        glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_CustomTarget->ID); // write to default framebuffer
+        glBlitFramebuffer(
+            0, 0, m_GBuffer->Width, m_GBuffer->Height, 0, 0, m_RenderSize.x, m_RenderSize.y, GL_DEPTH_BUFFER_BIT, GL_NEAREST
+        );
+
         // 6. custom forward render pass 
         // push default render target to the end of the render target buffer s.t. we always render 
         // the default buffer last.
