@@ -244,10 +244,12 @@ namespace T1
                 renderDeferredDirLight(*it);
             }
             // point lights
+            m_GLCache.SetCullFace(GL_FRONT);
             for (auto it = m_PointLights.begin(); it != m_PointLights.end(); ++it)
             {
                 renderDeferredPointLight(*it);
             }
+            m_GLCache.SetCullFace(GL_BACK);
         }
 
         m_GLCache.SetDepthTest(true);
