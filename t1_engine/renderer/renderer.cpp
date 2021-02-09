@@ -247,7 +247,11 @@ namespace T1
             m_GLCache.SetCullFace(GL_FRONT);
             for (auto it = m_PointLights.begin(); it != m_PointLights.end(); ++it)
             {
-                renderDeferredPointLight(*it);
+                // only render point lights if within frustum
+                if (m_Camera->Frustum.Intersect((*it)->Position, (*it)->Radius))
+                {
+                    renderDeferredPointLight(*it);
+                }
             }
             m_GLCache.SetCullFace(GL_BACK);
         }
