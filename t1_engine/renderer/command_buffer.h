@@ -53,6 +53,9 @@ namespace T1
 
         // returns the list of custom render commands per render target.
         std::vector<RenderCommand> GetCustomRenderCommands(RenderTarget *target, bool cull = false);
+
+        // returns the list of all render commands with mesh shadow casting
+        std::vector<RenderCommand> GetShadowCastRenderCommands();
     };
 }
 

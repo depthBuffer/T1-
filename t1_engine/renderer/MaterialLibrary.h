@@ -34,6 +34,8 @@ namespace T1
         Shader* deferredDirectionalShader;
         Shader* deferredPointShader;
 
+        Shader *dirShadowShader;
+
         Material *debugLightMaterial;
     public:
         MaterialLibrary(RenderTarget *gBuffer);

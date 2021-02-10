@@ -39,6 +39,12 @@ namespace T1
         delete m_GBuffer;
         delete m_CustomTarget;
 
+        // shadows
+        for (int i = 0; i < m_ShadowRenderTargets.size(); ++i)
+        {
+            delete m_ShadowRenderTargets[i];
+        }
+
         // lighting
         delete m_DebugLightMesh;
     }
@@ -69,6 +75,19 @@ namespace T1
 
         // materials
         m_MaterialLibrary = new MaterialLibrary(m_GBuffer);
+
+        // shadows
+        for (int i = 0; i < 4; ++i) // allow up to a total of 4 dir/spot shadow casters
+        {
+            RenderTarget *rt = new RenderTarget(1024, 1024, GL_UNSIGNED_BYTE, 1, true);
+            rt->m_DepthStencil.Bind();
+            rt->m_DepthStencil.SetFilterMin(GL_NEAREST);
+            rt->m_DepthStencil.SetFilterMax(GL_NEAREST);
+            rt->m_DepthStencil.SetWrapMode(GL_CLAMP_TO_BORDER);
+            float borderColor[] = { 1.0f, 1.0f, 1.0f, 1.0f };
+            glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);
+            m_ShadowRenderTargets.push_back(rt);
+        }
 
         // ubo
         glGenBuffers(1, &m_GlobalUBO);
@@ -218,6 +237,50 @@ namespace T1
         {
             renderCustomCommand(&deferredRenderCommands[i], nullptr, false);
         }
+
+        //attachments[0] = GL_NONE; // disable for next pass (shadow map generation)
+        attachments[1] = GL_NONE;
+        attachments[2] = GL_NONE;
+        attachments[3] = GL_NONE;
+        glDrawBuffers(4, attachments);
+
+        // 2. render all shadow casters to light shadow buffers
+        if (Shadows)
+        {
+            m_GLCache.SetCullFace(GL_FRONT);
+            std::vector<RenderCommand> shadowRenderCommands = m_CommandBuffer->GetShadowCastRenderCommands();
+            m_ShadowViewProjections.clear();
+
+            unsigned int shadowRtIndex = 0;
+            for (int i = 0; i < m_DirectionalLights.size(); ++i)
+            {
+                DirectionalLight* light = m_DirectionalLights[i];
+                if (light->CastShadows)
+                {
+                    m_MaterialLibrary->dirShadowShader->Use();
+
+                    glBindFramebuffer(GL_FRAMEBUFFER, m_ShadowRenderTargets[shadowRtIndex]->ID);
+                    glViewport(0, 0, m_ShadowRenderTargets[shadowRtIndex]->Width, m_ShadowRenderTargets[shadowRtIndex]->Height);
+                    glClear(GL_DEPTH_BUFFER_BIT);
+
+                    math::mat4 lightProjection = math::orthographic(-30.0f, 30.0f, 30.0f, -30.0f, -30.0f, 30.0f);
+
+                    math::vec3 dir = -light->Direction * 20.0f;
+
+                    math::mat4 lightView = math::lookAt(dir, math::vec3(0.0), math::vec3::UP);
+                    m_DirectionalLights[i]->LightSpaceViewProjection = lightProjection * lightView;
+                    m_DirectionalLights[i]->ShadowMapRT = m_ShadowRenderTargets[shadowRtIndex];
+                    for (int j = 0; j < shadowRenderCommands.size(); ++j)
+                    {
+                        renderShadowCastCommand(&shadowRenderCommands[j], lightProjection, lightView);
+                    }
+                    ++shadowRtIndex;
+                }
+            }
+            m_GLCache.SetCullFace(GL_BACK);
+        }
+        attachments[0] = GL_COLOR_ATTACHMENT0;
+        glDrawBuffers(4, attachments);
 
         glBindFramebuffer(GL_FRAMEBUFFER, m_CustomTarget->ID);
         glViewport(0, 0, m_CustomTarget->Width, m_CustomTarget->Height);
@@ -511,6 +574,13 @@ namespace T1
         dirShader->SetVector("camPos", m_Camera->Position);
         dirShader->SetVector("lightDir", light->Direction);
         dirShader->SetVector("lightColor", math::normalize(light->Color) * light->Intensity); 
+        dirShader->SetBool("ShadowsEnabled", Shadows);
+
+        if (light->ShadowMapRT)
+        {
+            dirShader->SetMatrix("lightShadowViewProjection", light->LightSpaceViewProjection);
+            light->ShadowMapRT->GetDepthStencilTexture()->Bind(3);
+        }
             
         renderMesh(m_NDCPlane, dirShader);
     }
@@ -534,5 +604,16 @@ namespace T1
         pointShader->SetMatrix("model", model);
 
         renderMesh(m_DeferredPointMesh, pointShader);    
+    }
+    // --------------------------------------------------------------------------------------------
+    void Renderer::renderShadowCastCommand(RenderCommand* command, const math::mat4& projection, const math::mat4& view)
+    {
+        Shader* shadowShader = m_MaterialLibrary->dirShadowShader;
+
+        shadowShader->SetMatrix("projection", projection);
+        shadowShader->SetMatrix("view", view);
+        shadowShader->SetMatrix("model", command->Transform);
+
+        renderMesh(command->Mesh, shadowShader);
     }
 }

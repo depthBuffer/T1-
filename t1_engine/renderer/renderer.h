@@ -39,6 +39,7 @@ namespace T1
     {
     public:
         // configuration
+        bool Shadows      = true;
         bool Lights       = true;
         bool RenderLights = true;
     private:       
@@ -64,6 +65,10 @@ namespace T1
         RenderTarget*              m_CurrentRenderTargetCustom = nullptr;
         RenderTarget*              m_CustomTarget {nullptr};
         Quad*                      m_NDCPlane {nullptr};
+
+        // shadow buffers
+        std::vector<RenderTarget*> m_ShadowRenderTargets;
+        std::vector<math::mat4>    m_ShadowViewProjections;
 
         // ubo
         unsigned int m_GlobalUBO;
@@ -115,6 +120,9 @@ namespace T1
         void renderDeferredDirLight(DirectionalLight* light);
         // render point light
         void renderDeferredPointLight(PointLight* light);
+
+        // render mesh for shadow buffer generation
+        void renderShadowCastCommand(RenderCommand* command, const math::mat4& projection, const math::mat4& view);
     };
 }
 

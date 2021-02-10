@@ -3,6 +3,7 @@ out vec4 FragColor;
 
 in vec2 TexCoords;
 
+#include ../common/shadows.glsl
 #include ../common/uniforms.glsl
 
 uniform sampler2D gPositionMetallic;
@@ -11,6 +12,9 @@ uniform sampler2D gAlbedoAO;
 
 uniform vec3 lightDir;
 uniform vec3 lightColor;
+
+uniform sampler2D lightShadowMap;
+uniform mat4 lightShadowViewProjection;
 
 void main()
 {
@@ -34,11 +38,16 @@ void main()
     // calculate light radiance    
     vec3 radiance = lightColor;        
     
+    // light shadow
+    vec4 fragPosLightSpace = lightShadowViewProjection * vec4(worldPos, 1.0);
+    float shadow = ShadowFactor(lightShadowMap, fragPosLightSpace, N, L);
+    
     // blinn-phong for now, pbr later
     float diff = max(dot(N, L), 0.0);
     float spec = pow(max(dot(N, H), 0.0), 64.0) * (1.0 - roughness);
-    vec3 Lo = (albedo * diff + vec3(spec)) * radiance;
+    vec3 Lo = (albedo * diff + vec3(spec)) * radiance * (1.0 - shadow);
         
     FragColor.rgb = Lo;
+    // FragColor.rgb = vec3(shadow);
     FragColor.a = 1.0;
 }

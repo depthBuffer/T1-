@@ -148,4 +148,24 @@ namespace T1
             return m_CustomRenderCommands[target];
         }
     }
+    // --------------------------------------------------------------------------------------------
+    std::vector<RenderCommand> CommandBuffer::GetShadowCastRenderCommands()
+    {
+        std::vector<RenderCommand> commands;
+        for (auto it = m_DeferredRenderCommands.begin(); it != m_DeferredRenderCommands.end(); ++it)
+        {
+            if (it->Material->ShadowCast)
+            {
+                commands.push_back(*it);
+            }
+        }
+        for (auto it = m_CustomRenderCommands[nullptr].begin(); it != m_CustomRenderCommands[nullptr].end(); ++it)
+        {
+            if (it->Material->ShadowCast)
+            {
+                commands.push_back(*it);
+            }
+        }
+        return commands;
+    }
 };
