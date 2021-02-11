@@ -465,6 +465,19 @@ namespace T1
         material->GetShader()->Use();
         material->GetShader()->SetMatrix("model", command->Transform);
 
+        material->GetShader()->SetBool("ShadowsEnabled", Shadows);
+        if (Shadows && material->Type == MATERIAL_CUSTOM && material->ShadowReceive)
+        {
+            for (int i = 0; i < m_DirectionalLights.size(); ++i)
+            {
+                if (m_DirectionalLights[i]->ShadowMapRT != nullptr)
+                {
+                    material->GetShader()->SetMatrix("lightShadowViewProjection" + std::to_string(i + 1), m_DirectionalLights[i]->LightSpaceViewProjection);
+                    m_DirectionalLights[i]->ShadowMapRT->GetDepthStencilTexture()->Bind(10 + i);
+                }
+            }
+        }
+
         // bind/active uniform sampler/texture objects
         auto* samplers = material->GetSamplerUniforms();
         for (auto it = samplers->begin(); it != samplers->end(); ++it)
