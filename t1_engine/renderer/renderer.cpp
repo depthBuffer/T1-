@@ -263,9 +263,9 @@ namespace T1
                     glViewport(0, 0, m_ShadowRenderTargets[shadowRtIndex]->Width, m_ShadowRenderTargets[shadowRtIndex]->Height);
                     glClear(GL_DEPTH_BUFFER_BIT);
 
-                    math::mat4 lightProjection = math::orthographic(-30.0f, 30.0f, 30.0f, -30.0f, -30.0f, 30.0f);
+                    math::mat4 lightProjection = math::orthographic(-20.0f, 20.0f, 20.0f, -20.0f, -15.0f, 20.0f);
 
-                    math::vec3 dir = -light->Direction * 20.0f;
+                    math::vec3 dir = -light->Direction * 10.0f;
 
                     math::mat4 lightView = math::lookAt(dir, math::vec3(0.0), math::vec3::UP);
                     m_DirectionalLights[i]->LightSpaceViewProjection = lightProjection * lightView;
