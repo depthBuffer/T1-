@@ -79,7 +79,7 @@ namespace T1
         // shadows
         for (int i = 0; i < 4; ++i) // allow up to a total of 4 dir/spot shadow casters
         {
-            RenderTarget *rt = new RenderTarget(1024, 1024, GL_UNSIGNED_BYTE, 1, true);
+            RenderTarget *rt = new RenderTarget(2048, 2048, GL_UNSIGNED_BYTE, 1, true);
             rt->m_DepthStencil.Bind();
             rt->m_DepthStencil.SetFilterMin(GL_NEAREST);
             rt->m_DepthStencil.SetFilterMax(GL_NEAREST);
