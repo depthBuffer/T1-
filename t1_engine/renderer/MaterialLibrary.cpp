@@ -68,6 +68,44 @@ namespace T1
         defaultMat->SetTexture("TexMetallic", Resources::LoadTexture("default metallic", "textures/black.png"), 5);
         defaultMat->SetTexture("TexRoughness", Resources::LoadTexture("default roughness", "textures/checkerboard.png"), 6);
         m_DefaultMaterials[SID("default")] = defaultMat;
+        // glass material
+        Shader* glassShader = Resources::LoadShader("glass", "shaders/forward_render.vs", "shaders/forward_render.fs", { "ALPHA_BLEND" });
+        glassShader->Use();
+        glassShader->SetInt("lightShadowMap1", 10);
+        glassShader->SetInt("lightShadowMap2", 10);
+        glassShader->SetInt("lightShadowMap3", 10);
+        glassShader->SetInt("lightShadowMap4", 10);
+        Material* glassMat = new Material(glassShader);
+        glassMat->Type = MATERIAL_CUSTOM; // this material can't fit in the deferred rendering pipeline (due to transparency sorting).
+        glassMat->SetTexture("TexAlbedo", T1::Resources::LoadTexture("glass albedo", "textures/glass.png", GL_TEXTURE_2D, GL_RGBA), 0);
+        glassMat->SetTexture("TexNormal", T1::Resources::LoadTexture("glass normal", "textures/pbr/plastic/normal.png"), 1);
+        glassMat->SetTexture("TexMetallic", T1::Resources::LoadTexture("glass metallic", "textures/pbr/plastic/metallic.png"), 2);
+        glassMat->SetTexture("TexRoughness", T1::Resources::LoadTexture("glass roughness", "textures/pbr/plastic/roughness.png"), 3);
+        glassMat->SetTexture("TexAO", T1::Resources::LoadTexture("glass ao", "textures/pbr/plastic/ao.png"), 4);
+        glassMat->Blend = true;
+        m_DefaultMaterials[SID("glass")] = glassMat;
+        // alpha blend material
+        Shader* alphaBlendShader = Resources::LoadShader("alpha blend", "shaders/forward_render.vs", "shaders/forward_render.fs", { "ALPHA_BLEND" });
+        alphaBlendShader->Use();
+        alphaBlendShader->SetInt("lightShadowMap1", 10);
+        alphaBlendShader->SetInt("lightShadowMap2", 10);
+        alphaBlendShader->SetInt("lightShadowMap3", 10);
+        alphaBlendShader->SetInt("lightShadowMap4", 10);
+        Material* alphaBlendMaterial = new Material(alphaBlendShader);
+        alphaBlendMaterial->Type = MATERIAL_CUSTOM;
+        alphaBlendMaterial->Blend = true;
+        m_DefaultMaterials[SID("alpha blend")] = alphaBlendMaterial;
+        // alpha cutout material
+        Shader* alphaDiscardShader = Resources::LoadShader("alpha discard", "shaders/forward_render.vs", "shaders/forward_render.fs", { "ALPHA_DISCARD" });
+        alphaDiscardShader->Use();
+        alphaDiscardShader->SetInt("lightShadowMap1", 10);
+        alphaDiscardShader->SetInt("lightShadowMap2", 10);
+        alphaDiscardShader->SetInt("lightShadowMap3", 10);
+        alphaDiscardShader->SetInt("lightShadowMap4", 10);
+        Material* alphaDiscardMaterial = new Material(alphaDiscardShader);
+        alphaDiscardMaterial->Type = MATERIAL_CUSTOM;
+        alphaDiscardMaterial->Cull = false;
+        m_DefaultMaterials[SID("alpha discard")] = alphaDiscardMaterial;
     }
     // --------------------------------------------------------------------------------------------
     void MaterialLibrary::generateInternalMaterials(RenderTarget *gBuffer)

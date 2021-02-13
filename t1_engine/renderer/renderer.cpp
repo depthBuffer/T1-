@@ -369,6 +369,15 @@ namespace T1
             }
         }
 
+        // 7. alpha material pass
+        glViewport(0, 0, m_RenderSize.x, m_RenderSize.y);
+        glBindFramebuffer(GL_FRAMEBUFFER, m_CustomTarget->ID);
+        std::vector<RenderCommand> alphaRenderCommands = m_CommandBuffer->GetAlphaRenderCommands(true);
+        for (unsigned int i = 0; i < alphaRenderCommands.size(); ++i)
+        {
+            renderCustomCommand(&alphaRenderCommands[i], nullptr);
+        }
+
         // render light mesh (as visual cue), if requested
         for (auto it = m_PointLights.begin(); it != m_PointLights.end(); ++it)
         {

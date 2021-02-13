@@ -29,6 +29,7 @@ namespace T1
         Renderer* m_Renderer;
 
         std::vector<RenderCommand> m_DeferredRenderCommands;
+        std::vector<RenderCommand> m_AlphaRenderCommands;
         std::map<RenderTarget*, std::vector<RenderCommand>> m_CustomRenderCommands;
 
 
@@ -50,6 +51,10 @@ namespace T1
         // returns the list of render commands. For minimizing state changes it is advised to first 
         // call Sort() before retrieving and issuing the render commands.
         std::vector<RenderCommand> GetDeferredRenderCommands(bool cull = false);
+
+        // returns the list of render commands of both deferred and forward pushes that require 
+        // alpha blending; which have to be rendered last. 
+        std::vector<RenderCommand> GetAlphaRenderCommands(bool cull = false);
 
         // returns the list of custom render commands per render target.
         std::vector<RenderCommand> GetCustomRenderCommands(RenderTarget *target, bool cull = false);
