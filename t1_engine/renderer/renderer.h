@@ -42,6 +42,7 @@ namespace T1
         bool Shadows      = true;
         bool Lights       = true;
         bool RenderLights = true;
+        bool Wireframe    = false;
     private:       
         // render state
         CommandBuffer* m_CommandBuffer {nullptr};

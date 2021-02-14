@@ -233,10 +233,12 @@ namespace T1
         unsigned int attachments[4] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2, GL_COLOR_ATTACHMENT3 };
         glDrawBuffers(4, attachments);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        m_GLCache.SetPolygonMode(Wireframe ? GL_LINE : GL_FILL);
         for (unsigned int i = 0; i < deferredRenderCommands.size(); ++i)
         {
             renderCustomCommand(&deferredRenderCommands[i], nullptr, false);
         }
+        m_GLCache.SetPolygonMode(GL_FILL);
 
         //attachments[0] = GL_NONE; // disable for next pass (shadow map generation)
         attachments[1] = GL_NONE;
@@ -363,10 +365,12 @@ namespace T1
             std::vector<RenderCommand> renderCommands = m_CommandBuffer->GetCustomRenderCommands(renderTarget);
 
             // terate over all the render commands and execute
+            m_GLCache.SetPolygonMode(Wireframe ? GL_LINE : GL_FILL);
             for (unsigned int i = 0; i < renderCommands.size(); ++i)
             {
                 renderCustomCommand(&renderCommands[i], nullptr);
             }
+            m_GLCache.SetPolygonMode(GL_FILL);
         }
 
         // 7. alpha material pass
