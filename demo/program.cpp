@@ -121,6 +121,7 @@ int main(int argc, char *argv[])
         lastFrameTime = currentFrameTime;
 
         {
+            //CLOCK(UPDATE);
             if (keysPressed[GLFW_KEY_W] || keysPressed[GLFW_KEY_UP])
                 camera.InputKey(deltaTime, T1::CAMERA_FORWARD);
             if (keysPressed[GLFW_KEY_S] || keysPressed[GLFW_KEY_DOWN])
@@ -143,10 +144,12 @@ int main(int argc, char *argv[])
         }
 
         {
+            //CLOCK(PUSH);
             renderer->PushRender(mainTorus);
         }
 
         {
+            //CLOCK(RENDER);
             // request T1 to render all currently pushed commands
             renderer->RenderPushedCommands();
         }
