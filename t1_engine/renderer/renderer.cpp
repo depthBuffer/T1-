@@ -404,6 +404,35 @@ namespace T1
             }
         }
 
+        // 9. render debug visuals
+        glViewport(0, 0, m_RenderSize.x, m_RenderSize.y);
+        glBindFramebuffer(GL_FRAMEBUFFER, m_CustomTarget->ID);
+        if (LightVolumes)
+        {
+            m_GLCache.SetPolygonMode(GL_LINE);
+            m_GLCache.SetCullFace(GL_FRONT);
+            for (auto it = m_PointLights.begin(); it != m_PointLights.end(); ++it)
+            {
+                m_MaterialLibrary->debugLightMaterial->SetVector("lightColor", (*it)->Color);
+
+                RenderCommand command;
+                command.Material = m_MaterialLibrary->debugLightMaterial;
+                command.Mesh = m_DebugLightMesh;
+                math::mat4 model;
+                math::translate(model, (*it)->Position);
+
+                math::vec3 scalar = math::vec3((*it)->Radius);
+
+                math::scale(model, scalar);
+                command.Transform = model;
+
+                renderCustomCommand(&command, nullptr);
+            }
+            m_GLCache.SetPolygonMode(GL_FILL);
+            m_GLCache.SetCullFace(GL_BACK);
+        }
+
+
         // blit to default framebuffer
         Blit(m_CustomTarget->GetColorTexture(0));
 
