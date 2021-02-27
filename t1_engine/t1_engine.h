@@ -22,6 +22,8 @@
 
 #include "glad/glad.h"
 
+class GLFWwindow;
+
 namespace T1
 {
     /* 
@@ -32,11 +34,36 @@ namespace T1
       w/ GLAD.
 
     */
-    Renderer* Init(GLADloadproc loadProcFunc);
+    Renderer* Init(GLFWwindow* window, GLADloadproc loadProcFunc);
 
 
     // cleans up T1 of all resources that are no longer relevant.
     void Clean();
+
+    /* 
+
+      Initializes all render data required for processing a new frame. This is mostly relevant
+      for rendering GUI items.
+
+    */
+    void NewFrame();
+
+    /* 
+
+      Renders (debugging) GUI (IMGUI) on top of T1's main renderer, by default the renderer's 
+      configuration UI is rendered as well, which can be enabled/disabled on demand.
+
+    */
+    void RenderGUI();
+
+    // pass mouse input to T1
+    void InputMouse(int button, int action);
+
+    // pass keyboard input to T1
+    void InputKey(int key, int action);
+
+    // pass scroll input to T1
+    void InputScroll(float scrollOffset);
 }
 
 #endif

@@ -3,6 +3,7 @@
 #include <t1_math/t1_math.h>
 #include <t1_utility/logging/log.h>
 #include <t1_engine/t1_engine.h>
+#include <t1_engine/imgui/imgui.h>
 
 #include <t1_utility/timing/diagnostics.h>
 
@@ -11,6 +12,7 @@
 void framebufferSizeFunc(GLFWwindow *window, int width, int height);
 void keyFunc(GLFWwindow *window, int key, int scancode, int action, int mods);
 void mousePosFunc(GLFWwindow *window, double xpos, double ypos);
+void mouseButtonFunc(GLFWwindow*, int button, int action, int mods);
 void mouseScrollFunc(GLFWwindow*, double xoffset, double yoffset);
 
 T1::Renderer* renderer;
@@ -20,12 +22,16 @@ float lastFrameTime = 0.0f;
 bool keysPressed[1024];
 bool keysActive[1024];
 bool wireframe = false;
+bool renderGUI = false;
 
 /* NOTE:
 
   This is a demo program set up to demonstrate the graphic fidelity
   of T1 and demonstrates one way of configuring and using T1
   from a developer's perspective.
+
+  The demo program also uses Dear IMGUI to add a basic layer of 
+  user input interaction.
 
 */
 int main(int argc, char *argv[])
@@ -67,6 +73,7 @@ int main(int argc, char *argv[])
         glfwSetFramebufferSizeCallback(window, framebufferSizeFunc);
         glfwSetKeyCallback(window, keyFunc);
         glfwSetCursorPosCallback(window, mousePosFunc);
+        glfwSetMouseButtonCallback(window, mouseButtonFunc);
         glfwSetScrollCallback(window, mouseScrollFunc);
 
         int width, height;
@@ -74,7 +81,7 @@ int main(int argc, char *argv[])
     Log::Message("GLFW initialized", LOG_INIT);
 
     Log::Message("Initializing render system", LOG_INIT);
-        renderer = T1::Init((GLADloadproc)glfwGetProcAddress);
+        renderer = T1::Init(window, (GLADloadproc)glfwGetProcAddress);
         renderer->SetRenderSize(width, height);
         renderer->SetCamera(&camera);
     Log::Message("Render system initialized", LOG_INIT);
@@ -114,6 +121,7 @@ int main(int argc, char *argv[])
     while (!glfwWindowShouldClose(window))
     {
         glfwPollEvents();
+        T1::NewFrame();
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         float currentFrameTime = glfwGetTime();
@@ -153,6 +161,17 @@ int main(int argc, char *argv[])
             // request T1 to render all currently pushed commands
             renderer->RenderPushedCommands();
         }
+
+        // GUI
+        if (renderGUI)
+        {
+            glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+            T1::RenderGUI();
+        }
+        else
+        {
+            glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+        }
         glfwSwapBuffers(window);
     }
 
@@ -182,6 +201,7 @@ void keyFunc(GLFWwindow *window, int key, int scancode, int action, int mods)
             keysActive[key] = false;
         }
     }
+    T1::InputKey(key, action);
 }
 
 bool firstMouse = true;
@@ -204,7 +224,13 @@ void mousePosFunc(GLFWwindow *window, double xpos, double ypos)
         camera.InputMouse(xoffset, yoffset);
 }
 
+void mouseButtonFunc(GLFWwindow*, int button, int action, int mods)
+{
+    T1::InputMouse(button, action);
+}
+
 void mouseScrollFunc(GLFWwindow*, double xoffset, double yoffset)
 {
     camera.InputScroll(xoffset, yoffset);
+    T1::InputScroll(yoffset);
 }

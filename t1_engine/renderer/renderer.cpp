@@ -11,6 +11,7 @@
 #include "../camera/camera.h"
 #include "../camera/fly_camera.h"
 #include "../resources/resources.h"
+#include "../imgui/imgui.h"
 
 #include <t1_math/linear_algebra/vector.h>
 #include <t1_math/linear_algebra/matrix.h>

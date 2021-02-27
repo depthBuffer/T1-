@@ -9,6 +9,9 @@ add_library(t1_engine
   camera/camera.cpp
   camera/fly_camera.cpp
   glad/glad.c
+  imgui/imgui_demo.cpp
+  imgui/imgui_draw.cpp
+  imgui/imgui.cpp
   mesh/circle.cpp
   mesh/cube.cpp
   mesh/mesh.cpp
