@@ -123,6 +123,17 @@ namespace T1
     {
         ImGui::Begin("Renderer", (bool*)1);
 
+        if (ImGui::CollapsingHeader("General Options"))
+        {
+            ImGui::Checkbox("Shadows", &renderer->Shadows);
+            ImGui::Checkbox("Lights", &renderer->Lights);
+            ImGui::Checkbox("Render Light Shapes", &renderer->RenderLights);
+        }
+        if (ImGui::CollapsingHeader("Debug visualization"))
+        {
+            ImGui::Checkbox("Wireframe", &renderer->Wireframe);
+            ImGui::Checkbox("Light Volumes", &renderer->LightVolumes);
+        }
         ImGui::End();
 
         ImGui::Render();
