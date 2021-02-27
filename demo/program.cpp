@@ -142,6 +142,11 @@ int main(int argc, char *argv[])
                 camera.InputKey(deltaTime, T1::CAMERA_UP);
             if (keysPressed[GLFW_KEY_Q])
                 camera.InputKey(deltaTime, T1::CAMERA_DOWN);
+            if (keysPressed[GLFW_KEY_TAB] && !keysActive[GLFW_KEY_TAB])
+            {
+                renderGUI = !renderGUI;
+                keysActive[GLFW_KEY_TAB] = true;
+            }
 
             // update render logic
             camera.Update(deltaTime);
@@ -221,7 +226,10 @@ void mousePosFunc(GLFWwindow *window, double xpos, double ypos)
 
         lastX = xpos;
         lastY = ypos;
+    if (!renderGUI)
+    {
         camera.InputMouse(xoffset, yoffset);
+    }
 }
 
 void mouseButtonFunc(GLFWwindow*, int button, int action, int mods)
