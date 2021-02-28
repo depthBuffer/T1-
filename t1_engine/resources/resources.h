@@ -15,6 +15,8 @@
 
 namespace T1
 {
+    class SceneNode;
+    class Renderer;
 
     /* 
 
@@ -30,6 +32,7 @@ namespace T1
         static std::map<unsigned int, Shader>      m_Shaders;
         static std::map<unsigned int, Texture>     m_Textures;
         static std::map<unsigned int, TextureCube> m_TexturesCube;
+        static std::map<unsigned int, SceneNode*>  m_Meshes;
     public:
 
     private:
@@ -47,6 +50,9 @@ namespace T1
         static TextureCube* LoadTextureCube(std::string name, std::string folder);
         static Texture*     GetTexture(std::string name);
         static TextureCube* GetTextureCube(std::string name);
+        // mesh/scene resources
+        static SceneNode*  LoadMesh(Renderer* renderer, std::string name, std::string path);
+        static SceneNode*  GetMesh(std::string name);
     };
 }
 #endif 

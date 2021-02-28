@@ -24,4 +24,4 @@ add_executable(demo
 )
 
 target_include_directories(demo PUBLIC ${DEMO_INCS})
-target_link_libraries(demo t1_math t1_utility t1_engine ${T1_lib}libglfw.so.3.2)
+target_link_libraries(demo t1_math t1_utility t1_engine ${T1_lib}libglfw.so.3.2 ${T1_lib}libassimp.so.3.3.1)
