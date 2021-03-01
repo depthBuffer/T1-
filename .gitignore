@@ -2,6 +2,7 @@
 build/*
 !build/shaders
 !build/textures
+!build/meshes
 
 .vscode/*
 

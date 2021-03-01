@@ -16,7 +16,7 @@ void mouseButtonFunc(GLFWwindow*, int button, int action, int mods);
 void mouseScrollFunc(GLFWwindow*, double xoffset, double yoffset);
 
 T1::Renderer* renderer;
-T1::FlyCamera camera(math::vec3(0.0f, 1.0f, 5.0f), math::vec3(0.0f, 0.0f, -1.0f));
+T1::FlyCamera camera(math::vec3(0.0f, 1.0f, 0.0f), math::vec3(0.0f, 0.0f, -1.0f));
 float deltaTime     = 0.0f;
 float lastFrameTime = 0.0f;
 bool keysPressed[1024];
@@ -106,10 +106,15 @@ int main(int argc, char *argv[])
     secondTorus->AddChild(thirdTorus);
 
     mainTorus->SetScale(1.0f);
-    mainTorus->SetPosition(math::vec3(0.0f, 0.0f, -3.0));
+    mainTorus->SetPosition(math::vec3(-4.4f, 3.46f, -0.3));
     secondTorus->SetScale(0.65f);
     secondTorus->SetRotation(math::vec4(0.0, 1.0, 0.0, math::Deg2Rad(90.0)));
     thirdTorus->SetScale(0.65f);
+
+    // mesh 
+    T1::SceneNode* sponza = T1::Resources::LoadMesh(renderer, "sponza", "meshes/sponza/sponza.obj");
+    sponza->SetPosition(math::vec3(0.0, -1.0, 0.0));
+    sponza->SetScale(0.01f);
 
     // lighting
     T1::DirectionalLight dirLight;
@@ -159,6 +164,7 @@ int main(int argc, char *argv[])
         {
             //CLOCK(PUSH);
             renderer->PushRender(mainTorus);
+            renderer->PushRender(sponza);
         }
 
         {
