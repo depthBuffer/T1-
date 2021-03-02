@@ -23,8 +23,14 @@ void main()
     vec3 N = normalize(mat3(model) * aNormal);
     vec3 T = normalize(mat3(model) * aTangent);
     T = normalize(T - dot(N, T) * N);
-    vec3 B = cross(N, T);
+    // vec3 B = cross(N, T);
+    vec3 B = normalize(mat3(model) * aBitangent);
 
+    // TBN must form a right handed coord system.
+    // Some models have symetric UVs. Check and fix.
+    if (dot(cross(N, T), B) < 0.0)
+        T = T * -1.0;
+    
     TBN = mat3(T, B, N);
     
 	
