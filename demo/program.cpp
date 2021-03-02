@@ -123,6 +123,28 @@ int main(int argc, char *argv[])
     dirLight.Intensity = 5.0f;
     renderer->AddLight(&dirLight);
 
+    std::vector<T1::PointLight> torchLights;
+    {
+        T1::PointLight torch;
+        torch.Radius = 2.5;
+        torch.Color = math::vec3(1.0f, 0.6f, 0.2f);
+        torch.Intensity = 50.0f;
+        torch.RenderMesh = true;
+
+        torch.Position = math::vec3( 4.85f, 0.7f, 1.43f);
+        torchLights.push_back(torch);
+        torch.Position = math::vec3( 4.85f, 0.7f, -2.2f);
+        torchLights.push_back(torch);
+        torch.Position = math::vec3(-6.19f, 0.7f, 1.43f);
+        torchLights.push_back(torch);
+        torch.Position = math::vec3(-6.19f, 0.7f, -2.2f);
+        torchLights.push_back(torch);
+        renderer->AddLight(&torchLights[0]);
+        renderer->AddLight(&torchLights[1]);
+        renderer->AddLight(&torchLights[2]);
+        renderer->AddLight(&torchLights[3]);
+    }
+
     while (!glfwWindowShouldClose(window))
     {
         glfwPollEvents();
