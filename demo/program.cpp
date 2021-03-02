@@ -118,7 +118,7 @@ int main(int argc, char *argv[])
 
     // lighting
     T1::DirectionalLight dirLight;
-    dirLight.Direction = math::vec3(-0.5f, -1.0f, -0.3f);
+    dirLight.Direction = math::vec3(0.2f, -1.0f, 0.25f);
     dirLight.Color = math::vec3(1.0f, 0.89f, 0.7f);
     dirLight.Intensity = 5.0f;
     renderer->AddLight(&dirLight);
