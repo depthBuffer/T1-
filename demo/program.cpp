@@ -127,7 +127,7 @@ int main(int argc, char *argv[])
     {
         T1::PointLight torch;
         torch.Radius = 2.5;
-        torch.Color = math::vec3(1.0f, 0.6f, 0.2f);
+        torch.Color = math::vec3(1.0f, 0.3f, 0.05f);
         torch.Intensity = 50.0f;
         torch.RenderMesh = true;
 
@@ -181,6 +181,12 @@ int main(int argc, char *argv[])
             mainTorus->SetRotation(math::vec4(math::vec3(1.0f, 0.0f, 0.0f), glfwGetTime() * 2.0));
             secondTorus->SetRotation(math::vec4(math::vec3(0.0f, 1.0f, 0.0f), glfwGetTime() * 3.0));
             thirdTorus->SetRotation(math::vec4(math::vec3(0.0f, 1.0f, 0.0f), glfwGetTime() * 4.0));
+
+            for (int i = 0; i < torchLights.size(); ++i)
+            {
+                torchLights[i].Radius = 1.5f + 0.1 * std::cos(std::sin(glfwGetTime() * 1.37 + i * 7.31) * 3.1 + i);
+                torchLights[i].Intensity = 25.0f + 5.0 * std::cos(std::sin(glfwGetTime() * 0.67 + i * 2.31) * 2.31 * i);
+            }
         }
 
         {
