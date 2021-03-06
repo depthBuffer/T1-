@@ -2,6 +2,7 @@
 
 #include "render_target.h"
 #include "MaterialLibrary.h"
+#include "PostProcessor.h"
 
 #include "../mesh/mesh.h"
 #include "../mesh/cube.h"
@@ -48,6 +49,9 @@ namespace T1
 
         // lighting
         delete m_DebugLightMesh;
+
+        // post-processing
+        delete m_PostProcessor;
     }
     // ------------------------------------------------------------------------
     void Renderer::Init(GLADloadproc loadProcFunc)
@@ -66,6 +70,7 @@ namespace T1
         m_NDCPlane = new Quad;
 
         m_CustomTarget       = new RenderTarget(1, 1, GL_HALF_FLOAT, 1, true);
+        m_PostProcessor      = new PostProcessor(this);
 
         // lights
         m_DebugLightMesh    = new Sphere(16, 16);
@@ -105,6 +110,8 @@ namespace T1
         m_GBuffer->Resize(width, height);
 
         m_CustomTarget->Resize(width, height);
+        
+        m_PostProcessor->UpdateRenderSize(width, height);
     }
     // ------------------------------------------------------------------------
     math::vec2 Renderer::GetRenderSize()
@@ -133,6 +140,11 @@ namespace T1
     void Renderer::SetCamera(Camera* camera)
     {
         m_Camera = camera;
+    }
+    // ------------------------------------------------------------------------
+    PostProcessor* Renderer::GetPostProcessor()
+    {
+        return m_PostProcessor;
     }
     // ------------------------------------------------------------------------
     Material* Renderer::CreateMaterial(std::string base)
@@ -434,8 +446,8 @@ namespace T1
         }
 
 
-        // blit to default framebuffer
-        Blit(m_CustomTarget->GetColorTexture(0));
+        // final post-processing steps, blitting to default framebuffer
+        m_PostProcessor->Blit(this, m_CustomTarget->GetColorTexture(0));
 
         // clear the command buffer s.t. the next frame/call can start from an empty slate again.
         m_CommandBuffer->Clear();

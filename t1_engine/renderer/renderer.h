@@ -27,6 +27,7 @@ namespace T1
     class Camera;
     class RenderTarget;
     class MaterialLibrary;
+    class PostProcessor;
 
     /*
 
@@ -37,6 +38,7 @@ namespace T1
     */
     class Renderer
     {
+        friend PostProcessor;
     public:
         // configuration
         bool Shadows      = true;
@@ -66,6 +68,7 @@ namespace T1
         std::vector<RenderTarget*> m_RenderTargetsCustom;
         RenderTarget*              m_CurrentRenderTargetCustom = nullptr;
         RenderTarget*              m_CustomTarget {nullptr};
+        PostProcessor*             m_PostProcessor {nullptr};
         Quad*                      m_NDCPlane {nullptr};
 
         // shadow buffers
@@ -91,6 +94,8 @@ namespace T1
 
         Camera* GetCamera();
         void    SetCamera(Camera* camera);
+
+        PostProcessor* GetPostProcessor();
 
         // create either a deferred default material (based on default set of materials available (like glass)), or a custom material (with custom you have to supply your own shader)
         Material* CreateMaterial(std::string base = "default"); // these don't have the custom flag set (default material has default state and uses checkerboard texture as albedo (and black metallic, half roughness, purple normal, white ao)
