@@ -33,7 +33,7 @@ namespace T1
         bool SSAO       = true;
 
         // ssao
-        int SSAOKernelSize = 64;      
+        int SSAOKernelSize = 32;      
     private:
         // global post-process state
         Shader*       m_PostProcessShader;
