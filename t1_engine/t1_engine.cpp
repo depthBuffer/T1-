@@ -5,6 +5,8 @@
 #include <GLFW/glfw3.h>
 #include "imgui/imgui.h"
 
+#include "renderer/PostProcessor.h"
+
 namespace T1
 {
     void APIENTRY glDebugOutput(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar *message, void *userParam);
@@ -129,6 +131,10 @@ namespace T1
             ImGui::Checkbox("Shadows", &renderer->Shadows);
             ImGui::Checkbox("Lights", &renderer->Lights);
             ImGui::Checkbox("Render Light Shapes", &renderer->RenderLights);
+        }
+        if (ImGui::CollapsingHeader("Post-processing"))
+        {
+            ImGui::Checkbox("SSAO", &renderer->GetPostProcessor()->SSAO);
         }
         if (ImGui::CollapsingHeader("Debug visualization"))
         {

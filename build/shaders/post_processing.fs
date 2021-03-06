@@ -5,6 +5,9 @@ in vec2 TexCoords;
 
 uniform sampler2D TexSrc;
 
+// post-process effect toggles
+uniform int SSAO;
+
 void main()
 {
     vec3 color = texture(TexSrc, TexCoords).rgb;

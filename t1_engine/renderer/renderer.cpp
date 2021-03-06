@@ -297,6 +297,9 @@ namespace T1
         attachments[0] = GL_COLOR_ATTACHMENT0;
         glDrawBuffers(4, attachments);
 
+        // 3. do post-processing steps before lighting stage (e.g. SSAO)
+        m_PostProcessor->ProcessPreLighting(this, m_GBuffer, m_Camera);
+
         glBindFramebuffer(GL_FRAMEBUFFER, m_CustomTarget->ID);
         glViewport(0, 0, m_CustomTarget->Width, m_CustomTarget->Height);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
@@ -629,8 +632,11 @@ namespace T1
     // --------------------------------------------------------------------------------------------
     void Renderer::renderDeferredAmbient()
     {
+        m_PostProcessor->SSAOOutput->Bind(6);
+
         Shader* ambientShader = m_MaterialLibrary->deferredAmbientShader;
         ambientShader->Use();
+        ambientShader->SetInt("SSAO", m_PostProcessor->SSAO);
         renderMesh(m_NDCPlane, ambientShader);
     }
     // --------------------------------------------------------------------------------------------

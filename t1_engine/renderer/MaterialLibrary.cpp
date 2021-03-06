@@ -123,6 +123,7 @@ namespace T1
         deferredAmbientShader->SetInt("gPositionMetallic", 0);
         deferredAmbientShader->SetInt("gNormalRoughness", 1);
         deferredAmbientShader->SetInt("gAlbedoAO", 2);
+        deferredAmbientShader->SetInt("TexSSAO", 6);
         deferredDirectionalShader->Use();
         deferredDirectionalShader->SetInt("gPositionMetallic", 0);
         deferredDirectionalShader->SetInt("gNormalRoughness", 1);

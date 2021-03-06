@@ -7,6 +7,9 @@ uniform sampler2D gPositionMetallic;
 uniform sampler2D gNormalRoughness;
 uniform sampler2D gAlbedoAO;
 
+uniform int SSAO;
+uniform sampler2D TexSSAO;
+
 void main()
 {
     // extract data from GBuffer
@@ -14,6 +17,10 @@ void main()
     vec4 normalRoughness  = texture(gNormalRoughness, TexCoords);
     vec4 positionMetallic = texture(gPositionMetallic, TexCoords);
     float ao = 1.0;
+    if(bool(SSAO))
+    {
+        ao = texture(TexSSAO, TexCoords).r;
+    }
     
     vec3 albedo = albedoAO.rgb;
 

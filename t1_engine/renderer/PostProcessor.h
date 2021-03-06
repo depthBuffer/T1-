@@ -26,10 +26,24 @@ namespace T1
     class PostProcessor
     {
     public:
+        // resulting post-processor intermediate outputs
+        Texture* SSAOOutput;
+
+        // toggles
+        bool SSAO       = true;
+
+        // ssao
+        int SSAOKernelSize = 64;      
     private:
         // global post-process state
         Shader*       m_PostProcessShader;
         RenderTarget* m_RTOutput;
+
+        // ssao
+        RenderTarget* m_SSAORenderTarget;
+        Shader*       m_SSAOShader;
+        Shader*       m_SSAOBlurShader;
+        Texture*      m_SSAONoise;
     public:
         PostProcessor(Renderer* renderer);
         ~PostProcessor();
@@ -38,6 +52,7 @@ namespace T1
         void UpdateRenderSize(unsigned int width, unsigned int height);
 
         // process stages
+        void ProcessPreLighting(Renderer* renderer, RenderTarget* gBuffer, Camera *camera);
 
         // blit all combined post-processing steps to default framebuffer
         void Blit(Renderer* renderer, Texture* soruce);
