@@ -78,7 +78,6 @@ namespace T1
     void PostProcessor::UpdateRenderSize(unsigned int width, unsigned int height)
     {
         // resize all buffers
-        m_SSAORenderTarget->Resize(width, height);
         m_SSAORenderTarget->Resize((int)(width * 0.5f), (int)(height * 0.5f));
     }
     // --------------------------------------------------------------------------------------------
