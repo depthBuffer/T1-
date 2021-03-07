@@ -135,6 +135,7 @@ namespace T1
         if (ImGui::CollapsingHeader("Post-processing"))
         {
             ImGui::Checkbox("SSAO", &renderer->GetPostProcessor()->SSAO);
+            ImGui::Checkbox("Bloom", &renderer->GetPostProcessor()->Bloom);
         }
         if (ImGui::CollapsingHeader("Debug visualization"))
         {

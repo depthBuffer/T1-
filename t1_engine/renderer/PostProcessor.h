@@ -34,8 +34,13 @@ namespace T1
         Texture* BlurredEightOutput;
         Texture* BlurredSixteenthOutput;
         Texture* SSAOOutput;
+        Texture* BloomOutput1;
+        Texture* BloomOutput2;
+        Texture* BloomOutput3;
+        Texture* BloomOutput4;
 
         // toggles
+        bool Bloom      = true;
         bool SSAO       = true;
 
         // ssao
@@ -50,6 +55,14 @@ namespace T1
         Shader*       m_SSAOShader;
         Shader*       m_SSAOBlurShader;
         Texture*      m_SSAONoise;
+        // bloom
+        RenderTarget* m_BloomRenderTarget0;
+        RenderTarget* m_BloomRenderTarget1;
+        RenderTarget* m_BloomRenderTarget2;
+        RenderTarget* m_BloomRenderTarget3;
+        RenderTarget* m_BloomRenderTarget4;
+        Shader*       m_BloomShader;
+        Shader*       m_BloomBlurShader;
         // downsample
         RenderTarget* m_DownSampleRTHalf;
         RenderTarget* m_DownSampleRTQuarter;

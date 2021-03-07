@@ -6,12 +6,32 @@ in vec2 TexCoords;
 uniform sampler2D TexSrc;
 
 // post-process effect toggles
+uniform int Bloom;
 uniform int SSAO;
+
+// bloom
+uniform sampler2D TexBloom1;
+uniform sampler2D TexBloom2;
+uniform sampler2D TexBloom3;
+uniform sampler2D TexBloom4;
 
 void main()
 {
     vec3 color = texture(TexSrc, TexCoords).rgb;
     vec2 texelSize = 1.0 / textureSize(TexSrc, 0).xy;    
+       
+    if(Bloom == 1)
+    {
+        const float strength = 1.0;
+        vec3 bloom1 = texture(TexBloom1, TexCoords).rgb * strength * 1.00;
+        vec3 bloom2 = texture(TexBloom2, TexCoords).rgb * strength * 0.75;
+        vec3 bloom3 = texture(TexBloom3, TexCoords).rgb * strength * 0.50;
+        vec3 bloom4 = texture(TexBloom4, TexCoords).rgb * strength * 0.25;
+        color += bloom1;
+        color += bloom2;
+        color += bloom3;
+        color += bloom4;
+    }
     
     // HDR tonemapping
     const float exposure = 1.5;

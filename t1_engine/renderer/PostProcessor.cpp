@@ -23,6 +23,10 @@ namespace T1
             m_PostProcessShader = T1::Resources::LoadShader("post process", "shaders/screen_quad.vs", "shaders/post_processing.fs");
             m_PostProcessShader->Use();
             m_PostProcessShader->SetInt("TexSrc", 0);
+            m_PostProcessShader->SetInt("TexBloom1", 1);
+            m_PostProcessShader->SetInt("TexBloom2", 2);
+            m_PostProcessShader->SetInt("TexBloom3", 3);
+            m_PostProcessShader->SetInt("TexBloom4", 4);
         }
         // down sample
         {
@@ -100,6 +104,22 @@ namespace T1
             m_SSAOShader->SetVectorArray("kernel", ssaoKernel.size(), ssaoKernel);
             m_SSAOShader->SetInt("sampleCount", SSAOKernelSize);
         }
+        // bloom 
+        {
+            m_BloomRenderTarget0 = new RenderTarget(1, 1, GL_HALF_FLOAT, 1, false);
+            m_BloomRenderTarget1 = new RenderTarget(1, 1, GL_HALF_FLOAT, 1, false);
+            m_BloomRenderTarget2 = new RenderTarget(1, 1, GL_HALF_FLOAT, 1, false);
+            m_BloomRenderTarget3 = new RenderTarget(1, 1, GL_HALF_FLOAT, 1, false);
+            m_BloomRenderTarget4 = new RenderTarget(1, 1, GL_HALF_FLOAT, 1, false);
+            BloomOutput1 = m_BloomRenderTarget1->GetColorTexture(0);
+            BloomOutput2 = m_BloomRenderTarget2->GetColorTexture(0);
+            BloomOutput3 = m_BloomRenderTarget3->GetColorTexture(0);
+            BloomOutput4 = m_BloomRenderTarget4->GetColorTexture(0);
+
+            m_BloomShader = T1::Resources::LoadShader("bloom", "shaders/screen_quad.vs", "shaders/post/bloom.fs");
+            m_SSAOShader->Use();
+            m_SSAOShader->SetInt("HDRScene", 0);
+        }      
     }
     // --------------------------------------------------------------------------------------------
     PostProcessor::~PostProcessor()
@@ -116,6 +136,11 @@ namespace T1
         delete m_GaussianRTSixteenth_H;
         delete m_SSAONoise;
         delete m_SSAORenderTarget;
+        delete m_BloomRenderTarget0;
+        delete m_BloomRenderTarget1;
+        delete m_BloomRenderTarget2;
+        delete m_BloomRenderTarget3;
+        delete m_BloomRenderTarget4;
     }
     // --------------------------------------------------------------------------------------------
     void PostProcessor::UpdateRenderSize(unsigned int width, unsigned int height)
@@ -133,6 +158,12 @@ namespace T1
         m_GaussianRTQuarter_H->Resize((int)(width * 0.25f), (int)(height * 0.25f));
         m_GaussianRTEight_H->Resize((int)(width * 0.125f), (int)(height * 0.125f));
         m_GaussianRTSixteenth_H->Resize((int)(width * 0.0675f), (int)(height * 0.0675f));
+
+        m_BloomRenderTarget0->Resize((int)(width * 0.5f), (int)(height * 0.5f));
+        m_BloomRenderTarget1->Resize((int)(width * 0.5f), (int)(height * 0.5f));
+        m_BloomRenderTarget2->Resize((int)(width * 0.25f), (int)(height * 0.25f));
+        m_BloomRenderTarget3->Resize((int)(width * 0.125f), (int)(height * 0.125f));
+        m_BloomRenderTarget4->Resize((int)(width * 0.0675f), (int)(height * 0.0675f));
 
         m_SSAORenderTarget->Resize((int)(width * 0.5f), (int)(height * 0.5f));
     }
@@ -172,6 +203,23 @@ namespace T1
             blur(renderer, DownSampledEightOutput,     m_DownSampleBlurRTEight,     4);
             blur(renderer, DownSampledSixteenthOutput, m_DownSampleBlurRTSixteenth, 4);
         }
+        // bloom
+        if (Bloom)
+        {
+            m_BloomShader->Use();
+            output->GetColorTexture(0)->Bind(0);
+
+            glBindFramebuffer(GL_FRAMEBUFFER, m_BloomRenderTarget0->ID);
+            glViewport(0, 0, m_BloomRenderTarget0->Width, m_BloomRenderTarget0->Height);
+            glClear(GL_COLOR_BUFFER_BIT);
+            renderer->renderMesh(renderer->m_NDCPlane, m_BloomShader);
+
+            // blur bloom result
+            blur(renderer, m_BloomRenderTarget0->GetColorTexture(0), m_BloomRenderTarget1, 8);
+            blur(renderer, m_BloomRenderTarget1->GetColorTexture(0), m_BloomRenderTarget2, 8);
+            blur(renderer, m_BloomRenderTarget2->GetColorTexture(0), m_BloomRenderTarget3, 8);
+            blur(renderer, m_BloomRenderTarget3->GetColorTexture(0), m_BloomRenderTarget4, 8);
+        }       
     }
     // --------------------------------------------------------------------------------------------
     void PostProcessor::Blit(Renderer* renderer, Texture* source)
@@ -182,10 +230,15 @@ namespace T1
 
         // bind input texture data
         source->Bind(0);
+        BloomOutput1->Bind(1);
+        BloomOutput2->Bind(2);
+        BloomOutput3->Bind(3);
+        BloomOutput4->Bind(4);
 
         // set settings 
         m_PostProcessShader->Use();
         m_PostProcessShader->SetBool("SSAO", SSAO);
+        m_PostProcessShader->SetBool("Bloom", Bloom);
 
         renderer->renderMesh(renderer->m_NDCPlane, m_PostProcessShader);               
     }
