@@ -420,6 +420,9 @@ namespace T1
             }
         }
 
+        // 8. post-processing stage after all lighting calculations 
+        m_PostProcessor->ProcessPostLighting(this, m_GBuffer, m_CustomTarget, m_Camera);
+
         // 9. render debug visuals
         glViewport(0, 0, m_RenderSize.x, m_RenderSize.y);
         glBindFramebuffer(GL_FRAMEBUFFER, m_CustomTarget->ID);

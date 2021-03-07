@@ -24,6 +24,39 @@ namespace T1
             m_PostProcessShader->Use();
             m_PostProcessShader->SetInt("TexSrc", 0);
         }
+        // down sample
+        {
+            m_DownSampleRTHalf      = new RenderTarget(1, 1, GL_HALF_FLOAT, 1, false); 
+            m_DownSampleRTQuarter   = new RenderTarget(1, 1, GL_HALF_FLOAT, 1, false); 
+            m_DownSampleRTEight     = new RenderTarget(1, 1, GL_HALF_FLOAT, 1, false);
+            m_DownSampleRTSixteenth = new RenderTarget(1, 1, GL_HALF_FLOAT, 1, false);
+            DownSampledHalfOutput      = m_DownSampleRTHalf->GetColorTexture(0);
+            DownSampledQuarterOutput   = m_DownSampleRTQuarter->GetColorTexture(0);
+            DownSampledEightOutput     = m_DownSampleRTEight->GetColorTexture(0);
+            DownSampledSixteenthOutput = m_DownSampleRTSixteenth->GetColorTexture(0);
+
+            m_DownSampleShader = T1::Resources::LoadShader("down sample", "shaders/screen_quad.vs", "shaders/post/down_sample.fs");
+            m_DownSampleShader->Use();
+            m_DownSampleShader->SetInt("TexSrc", 0);
+        }
+        // lower resolution downsample blurs
+        {
+            m_DownSampleBlurRTEight     = new RenderTarget(1, 1, GL_HALF_FLOAT, 1, false);
+            m_DownSampleBlurRTSixteenth = new RenderTarget(1, 1, GL_HALF_FLOAT, 1, false);
+            BlurredEightOutput     = m_DownSampleBlurRTEight->GetColorTexture(0);
+            BlurredSixteenthOutput = m_DownSampleBlurRTSixteenth->GetColorTexture(0);
+        }
+        // gaussian blur shader
+        {
+            m_GaussianRTHalf_H      = new RenderTarget(1, 1, GL_HALF_FLOAT, 1, false); 
+            m_GaussianRTQuarter_H   = new RenderTarget(1, 1, GL_HALF_FLOAT, 1, false); 
+            m_GaussianRTEight_H     = new RenderTarget(1, 1, GL_HALF_FLOAT, 1, false);
+            m_GaussianRTSixteenth_H = new RenderTarget(1, 1, GL_HALF_FLOAT, 1, false);
+
+            m_OnePassGaussianShader = T1::Resources::LoadShader("gaussian blur", "shaders/screen_quad.vs", "shaders/post/blur_guassian.fs");
+            m_OnePassGaussianShader->Use();
+            m_OnePassGaussianShader->SetInt("TexSrc", 0);
+        }
         // ssao
         {
             m_SSAORenderTarget = new RenderTarget(1280, 720, GL_HALF_FLOAT, 1, false);
@@ -71,6 +104,16 @@ namespace T1
     // --------------------------------------------------------------------------------------------
     PostProcessor::~PostProcessor()
     {
+        delete m_DownSampleRTHalf;
+        delete m_DownSampleRTQuarter;
+        delete m_DownSampleRTEight;
+        delete m_DownSampleRTSixteenth;
+        delete m_DownSampleBlurRTEight;
+        delete m_DownSampleBlurRTSixteenth;
+        delete m_GaussianRTHalf_H;
+        delete m_GaussianRTQuarter_H;
+        delete m_GaussianRTEight_H;
+        delete m_GaussianRTSixteenth_H;
         delete m_SSAONoise;
         delete m_SSAORenderTarget;
     }
@@ -78,6 +121,19 @@ namespace T1
     void PostProcessor::UpdateRenderSize(unsigned int width, unsigned int height)
     {
         // resize all buffers
+        m_DownSampleRTHalf->Resize((int)(width * 0.5f), (int)(height * 0.5f)); 
+        m_DownSampleRTQuarter->Resize((int)(width * 0.25f), (int)(height * 0.25f));
+        m_DownSampleRTEight->Resize((int)(width * 0.125f), (int)(height * 0.125f));
+        m_DownSampleRTSixteenth->Resize((int)(width * 0.0675f), (int)(height * 0.0675f));
+
+        m_DownSampleBlurRTEight->Resize((int)(width * 0.125f), (int)(height * 0.125f));
+        m_DownSampleBlurRTSixteenth->Resize((int)(width * 0.0675f), (int)(height * 0.0675f));
+
+        m_GaussianRTHalf_H->Resize((int)(width * 0.5f), (int)(height * 0.5f));
+        m_GaussianRTQuarter_H->Resize((int)(width * 0.25f), (int)(height * 0.25f));
+        m_GaussianRTEight_H->Resize((int)(width * 0.125f), (int)(height * 0.125f));
+        m_GaussianRTSixteenth_H->Resize((int)(width * 0.0675f), (int)(height * 0.0675f));
+
         m_SSAORenderTarget->Resize((int)(width * 0.5f), (int)(height * 0.5f));
     }
     // --------------------------------------------------------------------------------------------
@@ -102,6 +158,22 @@ namespace T1
         }
     }
     // --------------------------------------------------------------------------------------------
+    void PostProcessor::ProcessPostLighting(Renderer* renderer, RenderTarget* gBuffer, RenderTarget* output, Camera* camera)
+    {
+        // downsample
+        {
+            downsample(renderer, output->GetColorTexture(0), m_DownSampleRTHalf);
+            downsample(renderer, DownSampledHalfOutput,      m_DownSampleRTQuarter);
+            downsample(renderer, DownSampledQuarterOutput,  m_DownSampleRTEight);
+            downsample(renderer, DownSampledEightOutput,    m_DownSampleRTSixteenth);
+        }
+        // blur (only lower resolution) down-sampled textures (for glass refraction/ssr-glossy)
+        {
+            blur(renderer, DownSampledEightOutput,     m_DownSampleBlurRTEight,     4);
+            blur(renderer, DownSampledSixteenthOutput, m_DownSampleBlurRTSixteenth, 4);
+        }
+    }
+    // --------------------------------------------------------------------------------------------
     void PostProcessor::Blit(Renderer* renderer, Texture* source)
     {
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -116,5 +188,72 @@ namespace T1
         m_PostProcessShader->SetBool("SSAO", SSAO);
 
         renderer->renderMesh(renderer->m_NDCPlane, m_PostProcessShader);               
+    }
+    // --------------------------------------------------------------------------------------------
+    Texture* PostProcessor::downsample(Renderer* renderer, Texture* src, RenderTarget* dst)
+    {     
+        glViewport(0, 0, dst->Width, dst->Height);
+        glBindFramebuffer(GL_FRAMEBUFFER, dst->ID);
+        glClear(GL_COLOR_BUFFER_BIT);
+
+        src->Bind(0);
+        m_DownSampleShader->Use();
+        renderer->renderMesh(renderer->m_NDCPlane, m_DownSampleShader);
+
+        // output resulting (downsampled) texture
+        return dst->GetColorTexture(0);
+    }
+    // --------------------------------------------------------------------------------------------
+    Texture* PostProcessor::blur(Renderer* renderer, Texture* src, RenderTarget* dst, int count)
+    {
+        assert(count >= 2 && count % 2 == 0); // count must be more than 2 and be even    
+
+        // pick pre-defined render targets for blur based on render size
+        RenderTarget *rtHorizontal;
+        RenderTarget *rtVertical;
+        if (dst->Width == m_GaussianRTHalf_H->Width)
+        {
+            rtHorizontal = m_GaussianRTHalf_H;
+        } 
+        else if (dst->Width == m_GaussianRTQuarter_H->Width)
+        {
+            rtHorizontal = m_GaussianRTQuarter_H;
+        } 
+        else if (dst->Width == m_GaussianRTEight_H->Width)
+        {
+            rtHorizontal = m_GaussianRTEight_H;
+        }
+        else 
+        {
+            rtHorizontal = m_GaussianRTSixteenth_H;
+        }
+        // use destination as vertical render target of ping-pong algorithm
+        rtVertical = dst; 
+        // resize viewport to destination dimensions
+        glViewport(0, 0, dst->Width, dst->Height);
+
+        bool horizontal = true;
+        m_OnePassGaussianShader->Use();
+        for (int i = 0; i < count; ++i, horizontal = !horizontal)
+        {
+            m_OnePassGaussianShader->SetBool("horizontal", horizontal);
+            if (i == 0)
+            {
+                src->Bind(0);
+            } 
+            else if(horizontal)
+            {
+                rtVertical->GetColorTexture(0)->Bind(0);
+            }
+            else if (!horizontal)
+            {
+                rtHorizontal->GetColorTexture(0)->Bind(0);
+            }
+            glBindFramebuffer(GL_FRAMEBUFFER, horizontal ? rtHorizontal->ID : rtVertical->ID);
+            renderer->renderMesh(renderer->m_NDCPlane, m_OnePassGaussianShader);
+        }
+
+        // output resulting (blurred) texture
+        return dst->GetColorTexture(0);
     }
 }

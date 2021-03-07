@@ -27,6 +27,12 @@ namespace T1
     {
     public:
         // resulting post-processor intermediate outputs
+        Texture* DownSampledHalfOutput;
+        Texture* DownSampledQuarterOutput;
+        Texture* DownSampledEightOutput;
+        Texture* DownSampledSixteenthOutput;
+        Texture* BlurredEightOutput;
+        Texture* BlurredSixteenthOutput;
         Texture* SSAOOutput;
 
         // toggles
@@ -44,6 +50,21 @@ namespace T1
         Shader*       m_SSAOShader;
         Shader*       m_SSAOBlurShader;
         Texture*      m_SSAONoise;
+        // downsample
+        RenderTarget* m_DownSampleRTHalf;
+        RenderTarget* m_DownSampleRTQuarter;
+        RenderTarget* m_DownSampleRTEight;
+        RenderTarget* m_DownSampleRTSixteenth;
+        Shader*       m_DownSampleShader;
+        // (lower resolution) downsampled blurs
+        RenderTarget* m_DownSampleBlurRTEight;
+        RenderTarget* m_DownSampleBlurRTSixteenth;
+        // blur
+        RenderTarget* m_GaussianRTHalf_H; 
+        RenderTarget* m_GaussianRTQuarter_H;
+        RenderTarget* m_GaussianRTEight_H;
+        RenderTarget* m_GaussianRTSixteenth_H;
+        Shader*       m_OnePassGaussianShader;
     public:
         PostProcessor(Renderer* renderer);
         ~PostProcessor();
@@ -53,11 +74,14 @@ namespace T1
 
         // process stages
         void ProcessPreLighting(Renderer* renderer, RenderTarget* gBuffer, Camera *camera);
+        void ProcessPostLighting(Renderer* renderer, RenderTarget* gBuffer, RenderTarget* output, Camera *camera);
 
         // blit all combined post-processing steps to default framebuffer
         void Blit(Renderer* renderer, Texture* soruce);
 
     private:
+        Texture* downsample(Renderer* renderer, Texture* src, RenderTarget* dst);
+        Texture* blur(Renderer* renderer, Texture* src,  RenderTarget* dst, int count);
     };
 }
 #endif
