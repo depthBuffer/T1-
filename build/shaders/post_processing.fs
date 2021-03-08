@@ -22,7 +22,7 @@ void main()
        
     if(Bloom == 1)
     {
-        const float strength = 1.0;
+        const float strength = 0.5;
         vec3 bloom1 = texture(TexBloom1, TexCoords).rgb * strength * 1.00;
         vec3 bloom2 = texture(TexBloom2, TexCoords).rgb * strength * 0.75;
         vec3 bloom3 = texture(TexBloom3, TexCoords).rgb * strength * 0.50;
