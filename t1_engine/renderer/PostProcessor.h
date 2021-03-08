@@ -40,6 +40,8 @@ namespace T1
         Texture* BloomOutput4;
 
         // toggles
+        bool Sepia      = false;
+        bool Vignette   = true;
         bool Bloom      = true;
         bool SSAO       = true;
 

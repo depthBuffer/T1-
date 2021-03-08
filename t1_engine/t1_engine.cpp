@@ -136,6 +136,8 @@ namespace T1
         {
             ImGui::Checkbox("SSAO", &renderer->GetPostProcessor()->SSAO);
             ImGui::Checkbox("Bloom", &renderer->GetPostProcessor()->Bloom);
+            ImGui::Checkbox("Vignette", &renderer->GetPostProcessor()->Vignette);
+            ImGui::Checkbox("Sepia", &renderer->GetPostProcessor()->Sepia);
         }
         if (ImGui::CollapsingHeader("Debug visualization"))
         {

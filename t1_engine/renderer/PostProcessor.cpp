@@ -238,6 +238,8 @@ namespace T1
         // set settings 
         m_PostProcessShader->Use();
         m_PostProcessShader->SetBool("SSAO", SSAO);
+        m_PostProcessShader->SetBool("Sepia", Sepia);
+        m_PostProcessShader->SetBool("Vignette", Vignette);
         m_PostProcessShader->SetBool("Bloom", Bloom);
 
         renderer->renderMesh(renderer->m_NDCPlane, m_PostProcessShader);               
