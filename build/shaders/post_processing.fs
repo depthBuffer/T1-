@@ -55,8 +55,8 @@ void main()
     // HDR tonemapping
     const float exposure = 1.5;
     color *= exposure;
-    color = aces(color);
-    // color = color / (color + vec3(1.0));
+    // color = aces(color);
+    color = color / (color + vec3(1.0));
 	// gamma correct
 	color = pow(color, vec3(1.0/2.2));     
     
