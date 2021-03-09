@@ -22,6 +22,17 @@ uniform sampler2D TexBloom2;
 uniform sampler2D TexBloom3;
 uniform sampler2D TexBloom4;
 
+// https://knarkowicz.wordpress.com/2016/01/06/aces-filmic-tone-mapping-curve/
+vec3 aces(vec3 col)
+{
+    float a = 2.51f;
+    float b = 0.03f;
+    float c = 2.43f;
+    float d = 0.59f;
+    float e = 0.14f;
+    return clamp((col*(a*col+b))/(col*(c*col+d)+e), 0.0, 1.0);
+}
+
 void main()
 {
     vec3 color = texture(TexSrc, TexCoords).rgb;
@@ -44,7 +55,8 @@ void main()
     // HDR tonemapping
     const float exposure = 1.5;
     color *= exposure;
-    color = color / (color + vec3(1.0));
+    color = aces(color);
+    // color = color / (color + vec3(1.0));
 	// gamma correct
 	color = pow(color, vec3(1.0/2.2));     
     
