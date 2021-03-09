@@ -54,7 +54,7 @@ void main()
     }
     if(Vignette == 1)
     {
-        const float strength = 15.0;
+        const float strength = 10.0;
         const float power = 0.1;
         vec2 tuv = TexCoords * (vec2(1.0) - TexCoords.yx);
         float vign = tuv.x*tuv.y * strength;
