@@ -44,9 +44,14 @@ namespace T1
         bool Vignette   = true;
         bool Bloom      = true;
         bool SSAO       = true;
+        bool TXAA       = false;
+        bool MotionBlur = true;
 
         // ssao
         int SSAOKernelSize = 32;      
+
+        // motion-blur
+        float FPSTarget = 60.0;
     private:
         // global post-process state
         Shader*       m_PostProcessShader;

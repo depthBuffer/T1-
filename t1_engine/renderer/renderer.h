@@ -63,6 +63,7 @@ namespace T1
 
         // camera
         Camera*    m_Camera{nullptr};
+        math::mat4 m_PrevViewProjection;
 
         // render-targets/post
         std::vector<RenderTarget*> m_RenderTargetsCustom;

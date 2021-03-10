@@ -136,6 +136,9 @@ namespace T1
         {
             ImGui::Checkbox("SSAO", &renderer->GetPostProcessor()->SSAO);
             ImGui::Checkbox("Bloom", &renderer->GetPostProcessor()->Bloom);
+            ImGui::Checkbox("Motion Blur", &renderer->GetPostProcessor()->MotionBlur);
+            //ImGui::Checkbox("SSR", &renderer->GetPostProcessor()->SSR);
+            //ImGui::Checkbox("TXAA", &renderer->GetPostProcessor()->TXAA);
             ImGui::Checkbox("Vignette", &renderer->GetPostProcessor()->Vignette);
             ImGui::Checkbox("Sepia", &renderer->GetPostProcessor()->Sepia);
         }

@@ -455,6 +455,9 @@ namespace T1
         // final post-processing steps, blitting to default framebuffer
         m_PostProcessor->Blit(this, m_CustomTarget->GetColorTexture(0));
 
+        // store view projection as previous view projection for next frame's motion blur
+        m_PrevViewProjection = m_Camera->Projection * m_Camera->View;
+
         // clear the command buffer s.t. the next frame/call can start from an empty slate again.
         m_CommandBuffer->Clear();
 
@@ -525,6 +528,7 @@ namespace T1
         // as a default set of shader uniform variables always there); with UBO
         material->GetShader()->Use();
         material->GetShader()->SetMatrix("model", command->Transform);
+        material->GetShader()->SetMatrix("prevModel", command->PrevTransform);
 
         material->GetShader()->SetBool("ShadowsEnabled", Shadows);
         if (Shadows && material->Type == MATERIAL_CUSTOM && material->ShadowReceive)
@@ -609,6 +613,7 @@ namespace T1
         glBindBuffer(GL_UNIFORM_BUFFER, m_GlobalUBO);
         // transformation matrices
         glBufferSubData(GL_UNIFORM_BUFFER,   0, sizeof(math::mat4), &(m_Camera->Projection * m_Camera->View)[0][0]); // sizeof(math::mat4) = 64 bytes
+        glBufferSubData(GL_UNIFORM_BUFFER,  64, sizeof(math::mat4), &m_PrevViewProjection[0][0]); 
         glBufferSubData(GL_UNIFORM_BUFFER, 128, sizeof(math::mat4), &m_Camera->Projection[0][0]);
         glBufferSubData(GL_UNIFORM_BUFFER, 192, sizeof(math::mat4), &m_Camera->View[0][0]);
         glBufferSubData(GL_UNIFORM_BUFFER, 256, sizeof(math::mat4), &m_Camera->View[0][0]); // TODO: make inv function in math library

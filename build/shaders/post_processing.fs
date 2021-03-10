@@ -10,6 +10,7 @@ uniform int Vignette;
 uniform int Sepia;
 uniform int Bloom;
 uniform int SSAO;
+uniform int MotionBlur;
 
 // sepia
 const vec3 sepiaColor = vec3(1.2, 1.0, 0.8);
@@ -21,6 +22,11 @@ uniform sampler2D TexBloom1;
 uniform sampler2D TexBloom2;
 uniform sampler2D TexBloom3;
 uniform sampler2D TexBloom4;
+
+// motion blur
+uniform sampler2D gMotion;
+uniform float MotionScale;
+uniform int MotionSamples;
 
 // https://knarkowicz.wordpress.com/2016/01/06/aces-filmic-tone-mapping-curve/
 vec3 aces(vec3 col)
@@ -38,6 +44,21 @@ void main()
     vec3 color = texture(TexSrc, TexCoords).rgb;
     vec3 grayscale = vec3(dot(color, vec3(0.299, 0.587, 0.114)));
     vec2 texelSize = 1.0 / textureSize(TexSrc, 0).xy;    
+        
+    if(MotionBlur == 1)
+    {
+        vec2 motion = texture(gMotion, TexCoords).xy;
+        motion     *= MotionScale;
+        
+        vec3 avgColor = color;
+        for(int i = 0; i < MotionSamples; ++i)
+        {
+            vec2 offset = motion * (float(i) / float(MotionSamples - 1) - 0.5);
+            avgColor += texture(TexSrc, TexCoords + offset).rgb;
+        }
+        avgColor /= float(MotionSamples);
+        color = avgColor;
+    }    
        
     if(Bloom == 1)
     {

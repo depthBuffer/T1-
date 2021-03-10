@@ -8,10 +8,13 @@ layout (location = 4) in vec3 aBitangent;
 out vec2 UV0;
 out vec3 FragPos;
 out mat3 TBN;
+out vec4 ClipSpacePos;
+out vec4 PrevClipSpacePos;
 
 #include ../common/uniforms.glsl
 
 uniform mat4 model;
+uniform mat4 prevModel;
 
 float time;
 
@@ -33,6 +36,8 @@ void main()
     
     TBN = mat3(T, B, N);
     
+    ClipSpacePos     = viewProjection * model * vec4(aPos, 1.0);
+    PrevClipSpacePos = prevViewProjection * prevModel * vec4(aPos, 1.0);
 	
 	gl_Position =  projection * view * vec4(FragPos, 1.0);
 }

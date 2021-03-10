@@ -9,6 +9,7 @@
 #include "../shading/texture.h"
 #include "../shading/shader.h"
 #include "../camera/camera.h"
+#include "../imgui/imgui.h"
 
 #include <t1_math/common.h>
 #include <t1_utility/logging/log.h>
@@ -27,6 +28,7 @@ namespace T1
             m_PostProcessShader->SetInt("TexBloom2", 2);
             m_PostProcessShader->SetInt("TexBloom3", 3);
             m_PostProcessShader->SetInt("TexBloom4", 4);
+            m_PostProcessShader->SetInt("gMotion", 5);
         }
         // down sample
         {
@@ -234,6 +236,7 @@ namespace T1
         BloomOutput2->Bind(2);
         BloomOutput3->Bind(3);
         BloomOutput4->Bind(4);
+        renderer->m_GBuffer->GetColorTexture(3)->Bind(5);
 
         // set settings 
         m_PostProcessShader->Use();
@@ -241,6 +244,10 @@ namespace T1
         m_PostProcessShader->SetBool("Sepia", Sepia);
         m_PostProcessShader->SetBool("Vignette", Vignette);
         m_PostProcessShader->SetBool("Bloom", Bloom);
+        // motion blur
+        m_PostProcessShader->SetBool("MotionBlur", MotionBlur);
+        m_PostProcessShader->SetFloat("MotionScale", ImGui::GetIO().Framerate / FPSTarget * 0.8);
+        m_PostProcessShader->SetInt("MotionSamples", 16);
 
         renderer->renderMesh(renderer->m_NDCPlane, m_PostProcessShader);               
     }
