@@ -69,6 +69,7 @@ namespace T1
         std::vector<RenderTarget*> m_RenderTargetsCustom;
         RenderTarget*              m_CurrentRenderTargetCustom = nullptr;
         RenderTarget*              m_CustomTarget {nullptr};
+        RenderTarget*              m_PostProcessTarget1 {nullptr};
         PostProcessor*             m_PostProcessor {nullptr};
         Quad*                      m_NDCPlane {nullptr};
 
@@ -101,9 +102,11 @@ namespace T1
         // create either a deferred default material (based on default set of materials available (like glass)), or a custom material (with custom you have to supply your own shader)
         Material* CreateMaterial(std::string base = "default"); // these don't have the custom flag set (default material has default state and uses checkerboard texture as albedo (and black metallic, half roughness, purple normal, white ao)
         Material* CreateCustomMaterial(Shader* shader);         // these have the custom flag set (will be rendered in forward pass)
+        Material* CreatePostProcessingMaterial(Shader* shader); // these have the post-processing flag set (will be rendered after deferred/forward pass)
 
         void PushRender(Mesh* mesh, Material* material, math::mat4 transform = math::mat4(), math::mat4 prevFrameTransform = math::mat4());
         void PushRender(SceneNode* node);
+        void PushPostProcessor(Material* postProcessor);
 
         void AddLight(DirectionalLight *light);
         void AddLight(PointLight       *light);        

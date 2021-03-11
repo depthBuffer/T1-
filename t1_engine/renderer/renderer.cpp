@@ -51,6 +51,7 @@ namespace T1
         delete m_DebugLightMesh;
 
         // post-processing
+        delete m_PostProcessTarget1;
         delete m_PostProcessor;
     }
     // ------------------------------------------------------------------------
@@ -70,6 +71,7 @@ namespace T1
         m_NDCPlane = new Quad;
 
         m_CustomTarget       = new RenderTarget(1, 1, GL_HALF_FLOAT, 1, true);
+        m_PostProcessTarget1 = new RenderTarget(1, 1, GL_UNSIGNED_BYTE, 1, false);
         m_PostProcessor      = new PostProcessor(this);
 
         // lights
@@ -110,6 +112,7 @@ namespace T1
         m_GBuffer->Resize(width, height);
 
         m_CustomTarget->Resize(width, height);
+        m_PostProcessTarget1->Resize(width, height);
         
         m_PostProcessor->UpdateRenderSize(width, height);
     }
@@ -157,6 +160,11 @@ namespace T1
         return m_MaterialLibrary->CreateCustomMaterial(shader);
     }
     // ------------------------------------------------------------------------
+    Material* Renderer::CreatePostProcessingMaterial(Shader *shader)
+    {
+        return m_MaterialLibrary->CreatePostProcessingMaterial(shader);
+    }
+    // ------------------------------------------------------------------------
     void Renderer::PushRender(Mesh* mesh, Material* material, math::mat4 transform, math::mat4 prevFrameTransform)
     {
         // get current render target
@@ -192,6 +200,12 @@ namespace T1
             for(unsigned int i = 0; i < node->GetChildCount(); ++i)
                 nodeStack.push(node->GetChildByIndex(i));
         }
+    }
+    // ------------------------------------------------------------------------
+    void Renderer::PushPostProcessor(Material* postProcessor)
+    {
+        // we only care about the material, mesh as NDC quad is pre-defined.
+        m_CommandBuffer->Push(nullptr, postProcessor);
     }
     // ------------------------------------------------------------------------
     void Renderer::AddLight(DirectionalLight* light)
@@ -451,9 +465,19 @@ namespace T1
             m_GLCache.SetCullFace(GL_BACK);
         }
 
+        // 10. custom post-processing pass
+        std::vector<RenderCommand> postProcessingCommands = m_CommandBuffer->GetPostProcessingRenderCommands();
+        for (unsigned int i = 0; i < postProcessingCommands.size(); ++i)
+        {
+            // ping-pong between render textures
+            bool even = i % 2 == 0;
+            Blit(even ? m_CustomTarget->GetColorTexture(0) : m_PostProcessTarget1->GetColorTexture(0),
+                 even ? m_PostProcessTarget1 : m_CustomTarget, 
+                 postProcessingCommands[i].Material);
+        }
 
-        // final post-processing steps, blitting to default framebuffer
-        m_PostProcessor->Blit(this, m_CustomTarget->GetColorTexture(0));
+        // 11. final post-processing steps, blitting to default framebuffer
+        m_PostProcessor->Blit(this, postProcessingCommands.size() % 2 == 0 ? m_CustomTarget->GetColorTexture(0) : m_PostProcessTarget1->GetColorTexture(0));
 
         // store view projection as previous view projection for next frame's motion blur
         m_PrevViewProjection = m_Camera->Projection * m_Camera->View;

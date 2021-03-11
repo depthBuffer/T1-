@@ -56,6 +56,10 @@ namespace T1
                     m_CustomRenderCommands[target].push_back(command);
                 }
             }
+            else if (material->Type == MATERIAL_POST_PROCESS)
+            {
+                m_PostProcessingRenderCommands.push_back(command);
+            }
         }
     }
     // --------------------------------------------------------------------------------------------
@@ -63,6 +67,7 @@ namespace T1
     {
         m_DeferredRenderCommands.clear();
         m_CustomRenderCommands.clear();
+        m_PostProcessingRenderCommands.clear();
         m_AlphaRenderCommands.clear();
     }
     // --------------------------------------------------------------------------------------------
@@ -177,6 +182,11 @@ namespace T1
         {
             return m_AlphaRenderCommands;
         }
+    }
+    // --------------------------------------------------------------------------------------------
+    std::vector<RenderCommand> CommandBuffer::GetPostProcessingRenderCommands()
+    {
+        return m_PostProcessingRenderCommands;
     }
     // --------------------------------------------------------------------------------------------
     std::vector<RenderCommand> CommandBuffer::GetShadowCastRenderCommands()

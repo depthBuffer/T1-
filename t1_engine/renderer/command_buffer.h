@@ -30,6 +30,7 @@ namespace T1
 
         std::vector<RenderCommand> m_DeferredRenderCommands;
         std::vector<RenderCommand> m_AlphaRenderCommands;
+        std::vector<RenderCommand> m_PostProcessingRenderCommands;
         std::map<RenderTarget*, std::vector<RenderCommand>> m_CustomRenderCommands;
 
 
@@ -58,6 +59,9 @@ namespace T1
 
         // returns the list of custom render commands per render target.
         std::vector<RenderCommand> GetCustomRenderCommands(RenderTarget *target, bool cull = false);
+
+        // returns the list of post-processing render commands.
+        std::vector<RenderCommand> GetPostProcessingRenderCommands();
 
         // returns the list of all render commands with mesh shadow casting
         std::vector<RenderCommand> GetShadowCastRenderCommands();

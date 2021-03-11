@@ -111,6 +111,12 @@ int main(int argc, char *argv[])
     secondTorus->SetRotation(math::vec4(0.0, 1.0, 0.0, math::Deg2Rad(90.0)));
     thirdTorus->SetScale(0.65f);
 
+    // post processing
+    T1::Shader *postProcessing1 = T1::Resources::LoadShader("postprocessing1", "shaders/screen_quad.vs", "shaders/custom_post_1.fs");
+    T1::Shader *postProcessing2 = T1::Resources::LoadShader("postprocessing2", "shaders/screen_quad.vs", "shaders/custom_post_2.fs");
+    T1::Material *customPostProcessing1 = renderer->CreatePostProcessingMaterial(postProcessing1);
+    T1::Material *customPostProcessing2 = renderer->CreatePostProcessingMaterial(postProcessing2);
+
     // mesh 
     T1::SceneNode* sponza = T1::Resources::LoadMesh(renderer, "sponza", "meshes/sponza/sponza.obj");
     sponza->SetPosition(math::vec3(0.0, -1.0, 0.0));
@@ -193,6 +199,11 @@ int main(int argc, char *argv[])
             //CLOCK(PUSH);
             renderer->PushRender(mainTorus);
             renderer->PushRender(sponza);
+        }
+        {
+            // push post-processing calls
+            //renderer->PushPostProcessor(customPostProcessing1);
+            //renderer->PushPostProcessor(customPostProcessing2);
         }
 
         {

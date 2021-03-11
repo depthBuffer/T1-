@@ -56,6 +56,14 @@ namespace T1
         m_Materials.push_back(mat);
         return mat;
     }
+    // --------------------------------------------------------------------------------------------
+    Material* MaterialLibrary::CreatePostProcessingMaterial(Shader* shader)
+    {
+        Material* mat = new Material(shader);
+        mat->Type = MATERIAL_POST_PROCESS;
+        m_Materials.push_back(mat);
+        return mat;
+    }
     // --------------------------------------------------------------------------------------------    
     void MaterialLibrary::generateDefaultMaterials()
     {
