@@ -2,6 +2,7 @@
 
 #include "render_target.h"
 #include "MaterialLibrary.h"
+#include "PBR.h"
 #include "PostProcessor.h"
 
 #include "../mesh/mesh.h"
@@ -53,6 +54,9 @@ namespace T1
         // post-processing
         delete m_PostProcessTarget1;
         delete m_PostProcessor;
+
+        // pbr
+        delete m_PBR;      
     }
     // ------------------------------------------------------------------------
     void Renderer::Init(GLADloadproc loadProcFunc)
@@ -63,12 +67,15 @@ namespace T1
         // configure default OpenGL state
         m_GLCache.SetDepthTest(true);
         m_GLCache.SetCull(true);
+        glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
 
         glViewport(0.0f, 0.0f, m_RenderSize.x, m_RenderSize.y);
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         glClearDepth(1.0f);
 
         m_NDCPlane = new Quad;
+        glGenFramebuffers(1, &m_FramebufferCubemap);
+        glGenRenderbuffers(1, &m_CubemapDepthRBO);
 
         m_CustomTarget       = new RenderTarget(1, 1, GL_HALF_FLOAT, 1, true);
         m_PostProcessTarget1 = new RenderTarget(1, 1, GL_UNSIGNED_BYTE, 1, false);
@@ -96,12 +103,20 @@ namespace T1
             glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);
             m_ShadowRenderTargets.push_back(rt);
         }
+       
+        // pbr
+        m_PBR = new PBR(this);
 
         // ubo
         glGenBuffers(1, &m_GlobalUBO);
         glBindBuffer(GL_UNIFORM_BUFFER, m_GlobalUBO);
         glBufferData(GL_UNIFORM_BUFFER, 720, nullptr, GL_STREAM_DRAW);
         glBindBufferBase(GL_UNIFORM_BUFFER, 0, m_GlobalUBO);
+
+        // default PBR pre-compute (get a more default oriented HDR map for this)
+        T1::Texture *hdrMap = T1::Resources::LoadHDR("sky env", "textures/backgrounds/alley.hdr");
+        T1::PBRCapture *envBridge = m_PBR->ProcessEquirectangular(hdrMap);
+        SetSkyCapture(envBridge);
     }
     // ------------------------------------------------------------------------
     void Renderer::SetRenderSize(unsigned int width, unsigned int height)
@@ -529,6 +544,16 @@ namespace T1
         renderCustomCommand(&command, nullptr);
     }   
     // ------------------------------------------------------------------------
+    void Renderer::SetSkyCapture(PBRCapture* pbrEnvironment)
+    {
+        m_PBR->SetSkyCapture(pbrEnvironment);
+    }
+    // ------------------------------------------------------------------------
+    PBRCapture* Renderer::GetSkypCature()
+    {
+        return m_PBR->GetSkyCapture();
+    }
+    // ------------------------------------------------------------------------
     void Renderer::renderCustomCommand(RenderCommand* command, Camera* customCamera, bool updateGLSettings)
     {
         Material *material = command->Material;
@@ -551,6 +576,12 @@ namespace T1
         // default uniforms that are always configured regardless of shader configuration (see them 
         // as a default set of shader uniform variables always there); with UBO
         material->GetShader()->Use();
+        if (customCamera) // pass custom camera specific uniform
+        {
+            material->GetShader()->SetMatrix("projection", customCamera->Projection);
+            material->GetShader()->SetMatrix("view",       customCamera->View);
+            material->GetShader()->SetVector("CamPos",     customCamera->Position);
+        }
         material->GetShader()->SetMatrix("model", command->Transform);
         material->GetShader()->SetMatrix("prevModel", command->PrevTransform);
 
@@ -617,6 +648,75 @@ namespace T1
         }
 
         renderMesh(mesh, material->GetShader());
+    }
+    // ------------------------------------------------------------------------
+    void Renderer::renderToCubemap(SceneNode* scene,
+        TextureCube* target,
+        math::vec3   position,
+        unsigned int mipLevel)
+    {
+        // create a command buffer specifically for this operation (as to not conflict with main 
+        // command buffer)
+        CommandBuffer commandBuffer(this);
+        commandBuffer.Push(scene->Mesh, scene->Material, scene->GetTransform());
+        // recursive function transformed to iterative version by maintaining a stack
+        std::stack<SceneNode*> childStack;
+        for (unsigned int i = 0; i < scene->GetChildCount(); ++i)
+            childStack.push(scene->GetChildByIndex(i));
+        while (!childStack.empty())
+        {
+            SceneNode *child = childStack.top();
+            childStack.pop();
+            commandBuffer.Push(child->Mesh, child->Material, child->GetTransform());
+            for (unsigned int i = 0; i < child->GetChildCount(); ++i)
+                childStack.push(child->GetChildByIndex(i));
+        }
+        commandBuffer.Sort();
+        std::vector<RenderCommand> renderCommands = commandBuffer.GetCustomRenderCommands(nullptr);
+
+        renderToCubemap(renderCommands, target, position, mipLevel);
+    }
+    // ------------------------------------------------------------------------
+    void Renderer::renderToCubemap(std::vector<RenderCommand>& renderCommands, TextureCube* target, math::vec3 position, unsigned int mipLevel)
+    {
+        // define 6 camera directions/lookup vectors
+        Camera faceCameras[6] = {
+            Camera(position, math::vec3(1.0f,  0.0f,  0.0f), math::vec3(0.0f, -1.0f,  0.0f)),
+            Camera(position, math::vec3(-1.0f,  0.0f,  0.0f), math::vec3(0.0f, -1.0f,  0.0f)),
+            Camera(position, math::vec3(0.0f,  1.0f,  0.0f), math::vec3(0.0f,  0.0f,  1.0f)),
+            Camera(position, math::vec3(0.0f, -1.0f,  0.0f), math::vec3(0.0f,  0.0f,-1.0f)),
+            Camera(position, math::vec3(0.0f,  0.0f,  1.0f), math::vec3(0.0f, -1.0f,  0.0f)),
+            Camera(position, math::vec3(0.0f,  0.0f, -1.0f), math::vec3(0.0f, -1.0f,  0.0f))
+        };
+
+        // resize target dimensions based on mip level we're rendering.
+        float width = (float)target->FaceWidth * pow(0.5, mipLevel);
+        float height = (float)target->FaceHeight * pow(0.5, mipLevel);
+
+        glBindFramebuffer(GL_FRAMEBUFFER, m_FramebufferCubemap);
+        glBindRenderbuffer(GL_RENDERBUFFER, m_CubemapDepthRBO);
+        glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, width, height);
+        glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER,
+            m_CubemapDepthRBO);
+
+        // resize relevant buffers
+        glViewport(0, 0, width, height);
+        glBindFramebuffer(GL_FRAMEBUFFER, m_FramebufferCubemap);
+
+        for (unsigned int i = 0; i < 6; ++i)
+        {
+            Camera *camera = &faceCameras[i];
+            camera->SetPerspective(math::Deg2Rad(90.0f), width / height, 0.1f, 100.0f);
+            glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
+                GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, target->ID, mipLevel);
+            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+            for (unsigned int i = 0; i < renderCommands.size(); ++i)
+            {
+                // cubemap generation only works w/ custom materials 
+                assert(renderCommands[i].Material->Type == MATERIAL_CUSTOM);
+                renderCustomCommand(&renderCommands[i], camera);
+            }
+        }
     }
     // --------------------------------------------------------------------------------------------
     void Renderer::renderMesh(Mesh* mesh, Shader* shader)

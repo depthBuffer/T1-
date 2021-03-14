@@ -22,7 +22,9 @@ add_library(t1_engine
   renderer/command_buffer.cpp
   renderer/gl_cache.cpp
   renderer/MaterialLibrary.cpp
+  renderer/pbr_capture.cpp
   renderer/PostProcessor.cpp
+  renderer/PBR.cpp
   renderer/render_target.cpp
   renderer/renderer.cpp
   resources/mesh_loader.cpp

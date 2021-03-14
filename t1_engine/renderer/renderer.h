@@ -7,6 +7,7 @@
 #include "../lighting/directional_light.h"
 #include "../mesh/quad.h"
 #include "command_buffer.h"
+#include "pbr_capture.h"
 #include "gl_cache.h"
 
 #include "../glad/glad.h"
@@ -27,6 +28,7 @@ namespace T1
     class Camera;
     class RenderTarget;
     class MaterialLibrary;
+    class PBR;
     class PostProcessor;
 
     /*
@@ -39,6 +41,7 @@ namespace T1
     class Renderer
     {
         friend PostProcessor;
+        friend PBR;
     public:
         // configuration
         bool Shadows      = true;
@@ -72,10 +75,16 @@ namespace T1
         RenderTarget*              m_PostProcessTarget1 {nullptr};
         PostProcessor*             m_PostProcessor {nullptr};
         Quad*                      m_NDCPlane {nullptr};
+        unsigned int m_FramebufferCubemap; 
+        unsigned int m_CubemapDepthRBO;
 
         // shadow buffers
         std::vector<RenderTarget*> m_ShadowRenderTargets;
         std::vector<math::mat4>    m_ShadowViewProjections;
+       
+        // pbr
+        PBR* m_PBR;
+        unsigned int m_PBREnvironmentIndex;
 
         // ubo
         unsigned int m_GlobalUBO;
@@ -114,9 +123,16 @@ namespace T1
         void RenderPushedCommands();
 
         void Blit(Texture* src, RenderTarget* dst = nullptr, Material* material = nullptr, std::string textureUniformName = "TexSrc");
+
+        // pbr
+        void        SetSkyCapture(PBRCapture* pbrEnvironment);
+        PBRCapture* GetSkypCature();
     private:
         // renderer-specific logic for rendering a custom (forward-pass) command
         void renderCustomCommand(RenderCommand* command, Camera* customCamera, bool updateGLSettings = true);
+        // renderer-specific logic for rendering a list of commands to a target cubemap
+        void renderToCubemap(SceneNode* scene, TextureCube* target, math::vec3 position = math::vec3(0.0f), unsigned int mipLevel = 0);
+        void renderToCubemap(std::vector<RenderCommand>& renderCommands, TextureCube* target, math::vec3 position = math::vec3(0.0f), unsigned int mipLevel = 0);
         // minimal render logic to render a mesh 
         void renderMesh(Mesh* mesh, Shader* shader);
         // updates the global uniform buffer objects

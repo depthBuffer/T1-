@@ -93,6 +93,27 @@ namespace T1
         }
     }
     // --------------------------------------------------------------------------------------------
+    Texture* Resources::LoadHDR(std::string name, std::string path)
+    {
+        unsigned int id = SID(name);
+
+        // if texture already exists, return that handle
+        if (Resources::m_Textures.find(id) != Resources::m_Textures.end())
+            return &Resources::m_Textures[id];
+
+        Texture texture = TextureLoader::LoadHDRTexture(path);
+        // make sure texture got properly loaded
+        if (texture.Width > 0)
+        {
+            Resources::m_Textures[id] = texture;
+            return &Resources::m_Textures[id];
+        }
+        else
+        {
+            return nullptr;
+        }
+    }
+    // --------------------------------------------------------------------------------------------
     Texture* Resources::GetTexture(std::string name)
     {
         unsigned int id = SID(name);

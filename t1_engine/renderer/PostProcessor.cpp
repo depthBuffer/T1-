@@ -2,6 +2,7 @@
 
 #include "render_target.h"
 #include "renderer.h"
+#include "PBR.h"
 
 #include <random>
 

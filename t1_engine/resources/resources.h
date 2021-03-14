@@ -47,6 +47,7 @@ namespace T1
         static Shader*      GetShader(std::string name);
         // texture resources
         static Texture*     LoadTexture(std::string name, std::string path, GLenum target = GL_TEXTURE_2D, GLenum format = GL_RGBA, bool srgb = false);
+        static Texture*     LoadHDR(std::string name, std::string path);
         static TextureCube* LoadTextureCube(std::string name, std::string folder);
         static Texture*     GetTexture(std::string name);
         static TextureCube* GetTextureCube(std::string name);
