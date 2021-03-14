@@ -131,6 +131,9 @@ namespace T1
         deferredAmbientShader->SetInt("gPositionMetallic", 0);
         deferredAmbientShader->SetInt("gNormalRoughness", 1);
         deferredAmbientShader->SetInt("gAlbedoAO", 2);
+        deferredAmbientShader->SetInt("envIrradiance", 3);
+        deferredAmbientShader->SetInt("envPrefilter", 4);
+        deferredAmbientShader->SetInt("BRDFLUT", 5);
         deferredAmbientShader->SetInt("TexSSAO", 6);
         deferredDirectionalShader->Use();
         deferredDirectionalShader->SetInt("gPositionMetallic", 0);

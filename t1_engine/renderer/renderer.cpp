@@ -764,6 +764,11 @@ namespace T1
     // --------------------------------------------------------------------------------------------
     void Renderer::renderDeferredAmbient()
     {
+        PBRCapture* skyCapture = m_PBR->GetSkyCapture();
+
+        skyCapture->Irradiance->Bind(3);
+        skyCapture->Prefiltered->Bind(4);
+        m_PBR->m_RenderTargetBRDFLUT->GetColorTexture(0)->Bind(5);
         m_PostProcessor->SSAOOutput->Bind(6);
 
         Shader* ambientShader = m_MaterialLibrary->deferredAmbientShader;
