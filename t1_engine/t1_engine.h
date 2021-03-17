@@ -20,6 +20,7 @@
 #include "shading/texture_cube.h"
 #include "scene/scene.h"
 #include "scene/scene_node.h"
+#include "scene/background.h"
 
 #include "glad/glad.h"
 
