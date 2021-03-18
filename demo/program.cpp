@@ -115,6 +115,8 @@ int main(int argc, char *argv[])
     T1::Background* background = new T1::Background;
     T1::PBRCapture *pbrEnv = renderer->GetSkypCature();
     background->SetCubemap(pbrEnv->Prefiltered);
+	float lodLevel = 1.5f; 
+	background->Material->SetFloat("lodLevel", lodLevel);
 
     // post processing
     T1::Shader *postProcessing1 = T1::Resources::LoadShader("postprocessing1", "shaders/screen_quad.vs", "shaders/custom_post_1.fs");
