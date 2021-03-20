@@ -128,6 +128,7 @@ namespace T1
 
         if (ImGui::CollapsingHeader("General Options"))
         {
+            ImGui::Checkbox("IrradianceGI", &renderer->IrradianceGI);
             ImGui::Checkbox("Shadows", &renderer->Shadows);
             ImGui::Checkbox("Lights", &renderer->Lights);
             ImGui::Checkbox("Render Light Shapes", &renderer->RenderLights);

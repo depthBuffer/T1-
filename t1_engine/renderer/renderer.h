@@ -44,6 +44,7 @@ namespace T1
         friend PBR;
     public:
         // configuration
+        bool IrradianceGI = true;
         bool Shadows      = true;
         bool Lights       = true;
         bool RenderLights = true;
@@ -85,6 +86,7 @@ namespace T1
         // pbr
         PBR* m_PBR;
         unsigned int m_PBREnvironmentIndex;
+        std::vector<math::vec4> m_ProbeSpatials;
 
         // ubo
         unsigned int m_GlobalUBO;
@@ -127,6 +129,8 @@ namespace T1
         // pbr
         void        SetSkyCapture(PBRCapture* pbrEnvironment);
         PBRCapture* GetSkypCature();
+        void        AddIrradianceProbe(math::vec3 position, float radius);
+        void        BakeProbes(SceneNode* scene = nullptr);
     private:
         // renderer-specific logic for rendering a custom (forward-pass) command
         void renderCustomCommand(RenderCommand* command, Camera* customCamera, bool updateGLSettings = true);

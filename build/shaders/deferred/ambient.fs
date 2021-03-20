@@ -5,6 +5,7 @@ in vec2 TexCoords;
 
 #include ../common/constants.glsl
 #include ../common/brdf.glsl
+#include ../common/reflections.glsl
 #include ../common/uniforms.glsl
 
 uniform samplerCube envIrradiance;

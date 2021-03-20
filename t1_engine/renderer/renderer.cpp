@@ -554,6 +554,83 @@ namespace T1
         return m_PBR->GetSkyCapture();
     }
     // ------------------------------------------------------------------------
+    void Renderer::AddIrradianceProbe(math::vec3 position, float radius)
+    {
+        m_ProbeSpatials.push_back(math::vec4(position, radius));
+    }
+    // ------------------------------------------------------------------------
+    void Renderer::BakeProbes(SceneNode* scene)
+    {
+        if(!scene)
+        {
+            // if no scene node was provided, use root node (capture all)
+            scene = Scene::Root;
+        }
+        scene->UpdateTransform();
+        // build a command list of nodes within the reflection probe's capture box/radius.
+        CommandBuffer commandBuffer(this);
+        std::vector<Material*> materials;
+     
+        // originally a recursive function but transformed to iterative version
+        std::stack<SceneNode*> sceneStack;
+        sceneStack.push(scene);
+        while (!sceneStack.empty())
+        {
+            SceneNode *node = sceneStack.top();
+            sceneStack.pop();
+            if (node->Mesh != nullptr)
+            {
+                auto samplerUniforms = *(node->Material->GetSamplerUniforms());
+                if (samplerUniforms.find("TexAlbedo") != samplerUniforms.end())
+                {
+                    materials.push_back(new Material(m_PBR->m_ProbeCaptureShader));
+                    materials[materials.size() - 1]->SetTexture("TexAlbedo", samplerUniforms["TexAlbedo"].Texture, 0);
+                    if (samplerUniforms.find("TexNormal") != samplerUniforms.end())
+                    {
+                        materials[materials.size() - 1]->SetTexture("TexNormal", samplerUniforms["TexNormal"].Texture, 1);
+                    }
+                    if (samplerUniforms.find("TexMetallic") != samplerUniforms.end())
+                    {
+                        materials[materials.size() - 1]->SetTexture("TexMetallic", samplerUniforms["TexMetallic"].Texture, 2);
+                    }
+                    if (samplerUniforms.find("TexRoughness") != samplerUniforms.end())
+                    {
+                        materials[materials.size() - 1]->SetTexture("TexRoughness", samplerUniforms["TexRoughness"].Texture, 3);
+                    }
+                    commandBuffer.Push(node->Mesh, materials[materials.size() - 1], node->GetTransform());
+                }
+                else if (samplerUniforms.find("background") != samplerUniforms.end())
+                {   // we have a background scene node, add those as well
+                    materials.push_back(new Material(m_PBR->m_ProbeCaptureBackgroundShader));
+                    materials[materials.size() - 1]->SetTextureCube("background", samplerUniforms["background"].TextureCube, 0);
+                    materials[materials.size() - 1]->DepthCompare = node->Material->DepthCompare;
+                    commandBuffer.Push(node->Mesh, materials[materials.size() - 1], node->GetTransform());
+                }
+            }
+            for (unsigned int i = 0; i < node->GetChildCount(); ++i)
+                sceneStack.push(node->GetChildByIndex(i));
+        }
+        commandBuffer.Sort();
+        std::vector<RenderCommand> renderCommands = commandBuffer.GetCustomRenderCommands(nullptr);
+
+        m_PBR->ClearIrradianceProbes();
+        for (int i = 0; i < m_ProbeSpatials.size(); ++i)
+        {
+            TextureCube renderResult;
+            renderResult.DefaultInitialize(32, 32, GL_RGB, GL_FLOAT);
+
+            renderToCubemap(renderCommands, &renderResult, m_ProbeSpatials[i].xyz);
+
+            PBRCapture* capture = m_PBR->ProcessCube(&renderResult, false);
+            m_PBR->AddIrradianceProbe(capture, m_ProbeSpatials[i].xyz, m_ProbeSpatials[i].w);
+        }
+
+        for (int i = 0; i < materials.size(); ++i)
+        {
+            delete materials[i];
+        }
+    }  
+    // ------------------------------------------------------------------------
     void Renderer::renderCustomCommand(RenderCommand* command, Camera* customCamera, bool updateGLSettings)
     {
         Material *material = command->Material;
@@ -765,16 +842,57 @@ namespace T1
     void Renderer::renderDeferredAmbient()
     {
         PBRCapture* skyCapture = m_PBR->GetSkyCapture();
+        auto irradianceProbes = m_PBR->m_CaptureProbes;
 
-        skyCapture->Irradiance->Bind(3);
-        skyCapture->Prefiltered->Bind(4);
-        m_PBR->m_RenderTargetBRDFLUT->GetColorTexture(0)->Bind(5);
-        m_PostProcessor->SSAOOutput->Bind(6);
+        // if irradiance probes are present, use these as ambient lighting
+        if (IrradianceGI && irradianceProbes.size() > 0)
+        {
+            skyCapture->Prefiltered->Bind(4);
+            m_PBR->m_RenderTargetBRDFLUT->GetColorTexture(0)->Bind(5);
+            m_PostProcessor->SSAOOutput->Bind(6);
 
-        Shader* ambientShader = m_MaterialLibrary->deferredAmbientShader;
-        ambientShader->Use();
-        ambientShader->SetInt("SSAO", m_PostProcessor->SSAO);
-        renderMesh(m_NDCPlane, ambientShader);
+            m_GLCache.SetCullFace(GL_FRONT);
+            for (int i = 0; i < irradianceProbes.size(); ++i)
+            {
+                PBRCapture* probe = irradianceProbes[i];
+                // only render probe if within frustum
+                if (m_Camera->Frustum.Intersect(probe->Position, probe->Radius))
+                {
+                    probe->Irradiance->Bind(3);
+
+                    Shader* irradianceShader = m_MaterialLibrary->deferredIrradianceShader;
+                    irradianceShader->Use();
+                    irradianceShader->SetVector("camPos", m_Camera->Position);
+                    irradianceShader->SetVector("probePos", probe->Position);
+                    irradianceShader->SetFloat("probeRadius", probe->Radius);
+                    irradianceShader->SetInt("SSAO", m_PostProcessor->SSAO);
+
+                    math::mat4 model;
+                    math::translate(model, probe->Position);
+
+                    math::vec3 scalar = math::vec3(probe->Radius);
+
+                    math::scale(model, scalar);
+                    irradianceShader->SetMatrix("model", model);
+
+                    renderMesh(m_DeferredPointMesh, irradianceShader);
+                }
+            }
+            m_GLCache.SetCullFace(GL_BACK);
+        }
+        // otherwise do a full-screen ambient pass
+        else
+        {
+            skyCapture->Irradiance->Bind(3);
+            skyCapture->Prefiltered->Bind(4);
+            m_PBR->m_RenderTargetBRDFLUT->GetColorTexture(0)->Bind(5);
+            m_PostProcessor->SSAOOutput->Bind(6);
+
+            Shader* ambientShader = m_MaterialLibrary->deferredAmbientShader;
+            ambientShader->Use();
+            ambientShader->SetInt("SSAO", m_PostProcessor->SSAO);
+            renderMesh(m_NDCPlane, ambientShader);
+        }
     }
     // --------------------------------------------------------------------------------------------
     void Renderer::renderDeferredDirLight(DirectionalLight* light)

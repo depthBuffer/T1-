@@ -158,6 +158,22 @@ int main(int argc, char *argv[])
         renderer->AddLight(&torchLights[3]);
     }
 
+    // bake irradiance GI (with grid placement of probes)
+    {
+        // bottom floor - center
+        renderer->AddIrradianceProbe(math::vec3(  0.0f,  0.5f, -0.5f), 3.25);
+        renderer->AddIrradianceProbe(math::vec3(  3.0f,  0.5f, -0.5f), 3.25);
+        renderer->AddIrradianceProbe(math::vec3(  6.0f,  0.5f, -0.5f), 3.25);
+        renderer->AddIrradianceProbe(math::vec3(  8.5f,  0.5f, -0.5f), 3.25);
+        renderer->AddIrradianceProbe(math::vec3( 11.4f,  0.5f, -0.5f), 4.25);
+        renderer->AddIrradianceProbe(math::vec3( -3.0f,  0.5f, -0.5f), 3.25);
+        renderer->AddIrradianceProbe(math::vec3( -6.2f,  0.5f, -0.5f), 3.25);
+        renderer->AddIrradianceProbe(math::vec3( -9.5f,  0.5f, -0.5f), 3.25);
+        renderer->AddIrradianceProbe(math::vec3(-12.1f,  0.5f, -0.5f), 4.25);
+        // bake before rendering
+        renderer->BakeProbes();
+    }
+
     while (!glfwWindowShouldClose(window))
     {
         glfwPollEvents();

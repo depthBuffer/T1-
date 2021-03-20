@@ -124,6 +124,7 @@ namespace T1
         
         // deferred
         deferredAmbientShader     = T1::Resources::LoadShader("deferred ambient", "shaders/deferred/screen_ambient.vs", "shaders/deferred/ambient.fs");
+        deferredIrradianceShader  = T1::Resources::LoadShader("deferred irradiance", "shaders/deferred/ambient_irradience.vs", "shaders/deferred/ambient_irradience.fs");
         deferredDirectionalShader = T1::Resources::LoadShader("deferred directional", "shaders/deferred/screen_directional.vs", "shaders/deferred/directional.fs");
         deferredPointShader       = T1::Resources::LoadShader("deferred point", "shaders/deferred/point.vs", "shaders/deferred/point.fs");
 
@@ -135,6 +136,14 @@ namespace T1
         deferredAmbientShader->SetInt("envPrefilter", 4);
         deferredAmbientShader->SetInt("BRDFLUT", 5);
         deferredAmbientShader->SetInt("TexSSAO", 6);
+        deferredIrradianceShader->Use();
+        deferredIrradianceShader->SetInt("gPositionMetallic", 0);
+        deferredIrradianceShader->SetInt("gNormalRoughness", 1);
+        deferredIrradianceShader->SetInt("gAlbedoAO", 2);
+        deferredIrradianceShader->SetInt("envIrradiance", 3);
+        deferredIrradianceShader->SetInt("envPrefilter", 4);
+        deferredIrradianceShader->SetInt("BRDFLUT", 5);
+        deferredIrradianceShader->SetInt("TexSSAO", 6);
         deferredDirectionalShader->Use();
         deferredDirectionalShader->SetInt("gPositionMetallic", 0);
         deferredDirectionalShader->SetInt("gNormalRoughness", 1);
