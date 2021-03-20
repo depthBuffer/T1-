@@ -479,6 +479,10 @@ namespace T1
             m_GLCache.SetPolygonMode(GL_FILL);
             m_GLCache.SetCullFace(GL_BACK);
         }
+        if (RenderProbes)
+        {
+            m_PBR->RenderProbes();
+        }
 
         // 10. custom post-processing pass
         std::vector<RenderCommand> postProcessingCommands = m_CommandBuffer->GetPostProcessingRenderCommands();

@@ -147,6 +147,7 @@ namespace T1
         {
             ImGui::Checkbox("Wireframe", &renderer->Wireframe);
             ImGui::Checkbox("Light Volumes", &renderer->LightVolumes);
+            ImGui::Checkbox("Ambient Probes", &renderer->RenderProbes);
         }
         ImGui::End();
 

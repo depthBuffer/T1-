@@ -49,6 +49,7 @@ namespace T1
         bool Lights       = true;
         bool RenderLights = true;
         bool LightVolumes = false;
+        bool RenderProbes = false;
         bool Wireframe    = false;
     private:       
         // render state
