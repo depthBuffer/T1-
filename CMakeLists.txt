@@ -20,6 +20,7 @@ link_directories(t1_utility)
 link_directories(t1_engine)
 
 add_executable(demo
+  demo/scenes/pbr_test.cpp
   demo/program.cpp
 )
 

@@ -5,6 +5,8 @@
 #include <t1_engine/t1_engine.h>
 #include <t1_engine/imgui/imgui.h>
 
+#include "scenes/pbr_test.h"
+
 #include <t1_utility/timing/diagnostics.h>
 
 #include <GLFW/glfw3.h>
