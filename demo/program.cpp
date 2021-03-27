@@ -91,11 +91,21 @@ int main(int argc, char *argv[])
     // basic shapes
     T1::Plane plane(16, 16);
     T1::Sphere sphere(64, 64);
+    T1::Sphere tSphere(256, 256);
     T1::Torus torus(2.0f, 0.4f, 32, 32);
     T1::Cube cube;
 
     // material setup
     T1::Material* matPbr = renderer->CreateMaterial();
+    T1::Shader*   plasmaOrbShader = T1::Resources::LoadShader("plasma orb", "shaders/custom/plasma_orb.vs", "shaders/custom/plasma_orb.fs");
+    T1::Material* matPlasmaOrb = renderer->CreateCustomMaterial(plasmaOrbShader);
+    matPlasmaOrb->Cull = false;
+    matPlasmaOrb->Blend = true;
+    matPlasmaOrb->BlendSrc = GL_ONE;
+    matPlasmaOrb->BlendDst = GL_ONE;
+    matPlasmaOrb->SetTexture("TexPerllin", T1::Resources::LoadTexture("perlin noise", "textures/perlin.png"), 0);    
+    matPlasmaOrb->SetFloat("Strength", 1.5f);
+    matPlasmaOrb->SetFloat("Speed", 0.083f);
     // configure camera
     camera.SetPerspective(math::Deg2Rad(60.0f), renderer->GetRenderSize().x / renderer->GetRenderSize().y ,0.1f, 100.0f);
 
@@ -103,6 +113,7 @@ int main(int argc, char *argv[])
     T1::SceneNode* mainTorus   = T1::Scene::MakeSceneNode(&torus, matPbr);
     T1::SceneNode* secondTorus = T1::Scene::MakeSceneNode(&torus, matPbr);
     T1::SceneNode* thirdTorus  = T1::Scene::MakeSceneNode(&torus, matPbr);
+    T1::SceneNode* plasmaOrb   = T1::Scene::MakeSceneNode(&tSphere, matPlasmaOrb);
 
     mainTorus->AddChild(secondTorus);
     secondTorus->AddChild(thirdTorus);
@@ -112,6 +123,9 @@ int main(int argc, char *argv[])
     secondTorus->SetScale(0.65f);
     secondTorus->SetRotation(math::vec4(0.0, 1.0, 0.0, math::Deg2Rad(90.0)));
     thirdTorus->SetScale(0.65f);
+
+    plasmaOrb->SetPosition(math::vec3(-4.0f, 4.0f, 0.25f));
+    plasmaOrb->SetScale(0.6f);
 
     // - background
     T1::Background* background = new T1::Background;
@@ -218,12 +232,15 @@ int main(int argc, char *argv[])
                 torchLights[i].Radius = 1.5f + 0.1 * std::cos(std::sin(glfwGetTime() * 1.37 + i * 7.31) * 3.1 + i);
                 torchLights[i].Intensity = 25.0f + 5.0 * std::cos(std::sin(glfwGetTime() * 0.67 + i * 2.31) * 2.31 * i);
             }
+            
+            matPlasmaOrb->SetFloat("Time", glfwGetTime());           
         }
 
         {
             //CLOCK(PUSH);
             renderer->PushRender(mainTorus);
             renderer->PushRender(sponza);
+            renderer->PushRender(plasmaOrb);
             renderer->PushRender(background);
         }
         {
