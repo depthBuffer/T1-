@@ -186,6 +186,55 @@ int main(int argc, char *argv[])
         renderer->AddIrradianceProbe(math::vec3( -6.2f,  0.5f, -0.5f), 3.25);
         renderer->AddIrradianceProbe(math::vec3( -9.5f,  0.5f, -0.5f), 3.25);
         renderer->AddIrradianceProbe(math::vec3(-12.1f,  0.5f, -0.5f), 4.25);
+        // bottom floor - left wing
+        renderer->AddIrradianceProbe(math::vec3(  0.0f, 0.5f, 4.0f), 4.0);
+        renderer->AddIrradianceProbe(math::vec3(  4.0f, 0.5f, 4.0f), 4.0);
+        renderer->AddIrradianceProbe(math::vec3(  8.0f, 0.5f, 4.0f), 4.0);
+        renderer->AddIrradianceProbe(math::vec3( 12.0f, 0.5f, 4.0f), 4.0);
+        renderer->AddIrradianceProbe(math::vec3( -4.0f, 0.5f, 4.0f), 4.0);
+        renderer->AddIrradianceProbe(math::vec3( -8.0f, 0.5f, 4.0f), 4.0);
+        renderer->AddIrradianceProbe(math::vec3(-12.0f, 0.5f, 4.0f), 4.0);
+        // bottom floor - right wing
+        renderer->AddIrradianceProbe(math::vec3(  0.0f, 0.5f, -4.5f), 4.0);
+        renderer->AddIrradianceProbe(math::vec3(  4.0f, 0.5f, -4.5f), 4.0);
+        renderer->AddIrradianceProbe(math::vec3(  8.0f, 0.5f, -4.5f), 4.0);
+        renderer->AddIrradianceProbe(math::vec3( 12.0f, 0.5f, -4.5f), 4.0);
+        renderer->AddIrradianceProbe(math::vec3( -4.0f, 0.5f, -4.5f), 4.0);
+        renderer->AddIrradianceProbe(math::vec3( -8.0f, 0.5f, -4.5f), 4.0);
+        renderer->AddIrradianceProbe(math::vec3(-12.0f, 0.5f, -4.5f), 4.0);
+        // 1st floor - center wing
+        renderer->AddIrradianceProbe(math::vec3(  0.0f, 5.0f, -0.5f), 4.5);
+        renderer->AddIrradianceProbe(math::vec3(  4.0f, 5.0f, -0.5f), 4.0);
+        renderer->AddIrradianceProbe(math::vec3(  8.0f, 5.0f, -0.5f), 4.5);
+        renderer->AddIrradianceProbe(math::vec3( 12.0f, 5.0f, -0.5f), 4.5);
+        renderer->AddIrradianceProbe(math::vec3( -4.0f, 5.0f, -0.5f), 4.5);
+        renderer->AddIrradianceProbe(math::vec3( -8.0f, 5.0f, -0.5f), 4.0);
+        renderer->AddIrradianceProbe(math::vec3(-12.0f, 5.0f, -0.5f), 4.5);
+        // 1st floor - left wing
+        renderer->AddIrradianceProbe(math::vec3(  0.0f, 5.0f, 4.0), 4.0);
+        renderer->AddIrradianceProbe(math::vec3(  4.0f, 5.0f, 4.0), 4.0);
+        renderer->AddIrradianceProbe(math::vec3(  8.0f, 5.0f, 4.0), 4.0);
+        renderer->AddIrradianceProbe(math::vec3( 12.0f, 5.0f, 4.0), 4.0);
+        renderer->AddIrradianceProbe(math::vec3( -4.0f, 5.0f, 4.0), 4.0);
+        renderer->AddIrradianceProbe(math::vec3( -8.0f, 5.0f, 4.0), 4.0);
+        renderer->AddIrradianceProbe(math::vec3(-11.5f, 5.0f, 4.0), 4.0);
+        // 1st floor - right wing
+        renderer->AddIrradianceProbe(math::vec3(  0.0f, 5.0f, -4.5f), 4.0);
+        renderer->AddIrradianceProbe(math::vec3(  4.0f, 5.0f, -4.5f), 4.0);
+        renderer->AddIrradianceProbe(math::vec3(  8.0f, 5.0f, -4.5f), 4.0);
+        renderer->AddIrradianceProbe(math::vec3( 12.0f, 5.0f, -4.5f), 4.0);
+        renderer->AddIrradianceProbe(math::vec3( -4.0f, 5.0f, -4.5f), 4.0);
+        renderer->AddIrradianceProbe(math::vec3( -8.0f, 5.0f, -4.5f), 4.0);
+        renderer->AddIrradianceProbe(math::vec3(-11.5f, 5.0f, -4.5f), 4.0);
+        // 2nd floor - center wing
+        renderer->AddIrradianceProbe(math::vec3(  0.0f, 9.5f, -0.5f), 4.5);
+        renderer->AddIrradianceProbe(math::vec3(  4.0f, 9.5f, -0.5f), 4.5);
+        renderer->AddIrradianceProbe(math::vec3(  8.0f, 9.5f, -0.5f), 4.5);
+        renderer->AddIrradianceProbe(math::vec3( 12.0f, 9.5f, -0.5f), 4.5);
+        renderer->AddIrradianceProbe(math::vec3( -4.0f, 9.5f, -0.5f), 4.5);
+        renderer->AddIrradianceProbe(math::vec3( -8.0f, 9.5f, -0.5f), 4.5);
+        renderer->AddIrradianceProbe(math::vec3(-11.5f, 9.5f, -0.5f), 4.5);
+
         // bake before rendering
         renderer->BakeProbes();
     }
