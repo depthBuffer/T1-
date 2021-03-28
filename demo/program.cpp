@@ -8,6 +8,7 @@
 #include "scenes/pbr_test.h"
 
 #include <t1_utility/timing/diagnostics.h>
+#include <t1_utility/random/random.h>
 
 #include <GLFW/glfw3.h>
 
@@ -173,6 +174,26 @@ int main(int argc, char *argv[])
         renderer->AddLight(&torchLights[2]);
         renderer->AddLight(&torchLights[3]);
     }
+    
+    std::vector<T1::PointLight> randomLights;
+    std::vector<math::vec3> randomLightStartPositions;
+    {
+        for (int i = 0; i < 100; ++i)
+        {
+            T1::PointLight light;
+            light.Radius = 1.0 + Random::Uniliteral() * 3.0;
+            light.Intensity = 10.0 + Random::Uniliteral() * 1000.0;
+            light.Color = math::vec3(Random::Uniliteral(), Random::Uniliteral(), Random::Uniliteral());
+            light.RenderMesh = true;
+            randomLights.push_back(light);
+            randomLightStartPositions.push_back(math::vec3(Random::Biliteral() * 12.0f, Random::Uniliteral() * 5.0f, Random::Biliteral() * 6.0f));
+        }
+        for (int i = 0; i < randomLights.size(); ++i)
+        {
+            // uncomment for deferred lighting madness
+            //renderer->AddLight(&randomLights[i]);
+        }
+    }
 
     // bake irradiance GI (with grid placement of probes)
     {
@@ -280,6 +301,11 @@ int main(int argc, char *argv[])
             {
                 torchLights[i].Radius = 1.5f + 0.1 * std::cos(std::sin(glfwGetTime() * 1.37 + i * 7.31) * 3.1 + i);
                 torchLights[i].Intensity = 25.0f + 5.0 * std::cos(std::sin(glfwGetTime() * 0.67 + i * 2.31) * 2.31 * i);
+            }
+
+            for (int i = 0; i < randomLights.size(); ++i)
+            {
+                randomLights[i].Position = randomLightStartPositions[i] + math::vec3(std::sin(glfwGetTime() * 0.31f + i * 3.17f) * 1.79f, std::cos(glfwGetTime() * 0.21f + i * 1.11f) * 1.61f, std::sin(glfwGetTime() * 0.49 + i * 0.79f) * 1.31);
             }
             
             matPlasmaOrb->SetFloat("Time", glfwGetTime());           
