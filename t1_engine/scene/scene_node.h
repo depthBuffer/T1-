@@ -27,8 +27,8 @@ namespace T1
     {
     public:
         // each node contains relevant render state
-        Mesh*     Mesh {nullptr};
-        Material* Material {nullptr};
+        T1::Mesh*     Mesh {nullptr};
+        T1::Material* Material {nullptr};
 
         // bounding box 
         math::vec3 BoxMin = math::vec3(-99999.0f);

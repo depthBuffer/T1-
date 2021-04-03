@@ -17,8 +17,8 @@ namespace T1
     {
         math::mat4 Transform;
         math::mat4 PrevTransform;
-        Mesh*      Mesh;
-        Material*  Material;
+        T1::Mesh*     Mesh;
+        T1::Material* Material;
         math::vec3 BoxMin;
         math::vec3 BoxMax;
     };

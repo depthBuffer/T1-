@@ -64,8 +64,8 @@ namespace T1
         unsigned int Unit;
         union 
         {
-            Texture     *Texture;
-            TextureCube *TextureCube;
+            T1::Texture     *Texture;
+            T1::TextureCube *TextureCube;
         };
 
         UniformValueSampler() {}
