@@ -528,22 +528,12 @@ namespace T1
         // container object for all voxel data required for an individual algorithm march
         struct MCube 
         {
-            union 
-            {
-                math::vec4 Corners[8]; // <xyz: position, w: isosurface distance>
-                struct 
-                {
-                    // notation: L = Left, R = Right, B = Bottom, T = Top, F = Front, B = Back (XYZ in right-handed system)
-                    math::vec4 LBB;
-                    math::vec4 RBB;
-                    math::vec4 RBF;
-                    math::vec4 LBF;
-                    math::vec4 LTB;
-                    math::vec4 RTB;
-                    math::vec4 RTF;
-                    math::vec4 LTF;
-                };            
-            };
+            math::vec4 Corners[8]; // <xyz: position, w: isosurface distance>
+
+            // corner indices; notation: L = Left, R = Right, B = Bottom, T = Top, F = Front, B = Back
+            // (XYZ in right-handed system)
+            enum { LBB, RBB, RBF, LBF, LTB, RTB, RTF, LTF };
+
             MCube() { }
             int GetEdgeIndex()
             {
@@ -600,36 +590,36 @@ namespace T1
                     math::vec3 offset;
                     // left-bottom-back
                     offset = math::vec3(-halfCube, -halfCube, -halfCube);
-                    voxel.LBB = math::vec4(center + offset, 0.0f); 
-                    voxel.LBB.w = sdf(voxel.LBB.xyz);
+                    voxel.Corners[MCube::LBB] = math::vec4(center + offset, 0.0f); 
+                    voxel.Corners[MCube::LBB].w = sdf(voxel.Corners[MCube::LBB].xyz);
                     // right-bottom-back
                     offset = math::vec3( halfCube, -halfCube, -halfCube);
-                    voxel.RBB = math::vec4(center + offset, 0.0f); 
-                    voxel.RBB.w = sdf(voxel.RBB.xyz);
+                    voxel.Corners[MCube::RBB] = math::vec4(center + offset, 0.0f); 
+                    voxel.Corners[MCube::RBB].w = sdf(voxel.Corners[MCube::RBB].xyz);
                     // right-bottom-front
                     offset = math::vec3( halfCube, -halfCube,  halfCube);
-                    voxel.RBF = math::vec4(center + offset, 0.0f); 
-                    voxel.RBF.w = sdf(voxel.RBF.xyz);
+                    voxel.Corners[MCube::RBF] = math::vec4(center + offset, 0.0f); 
+                    voxel.Corners[MCube::RBF].w = sdf(voxel.Corners[MCube::RBF].xyz);
                     // left-bottom-front
                     offset = math::vec3(-halfCube, -halfCube,  halfCube);
-                    voxel.LBF   = math::vec4(center + offset, 0.0f); 
-                    voxel.LBF.w = sdf(voxel.LBF.xyz);
+                    voxel.Corners[MCube::LBF]   = math::vec4(center + offset, 0.0f); 
+                    voxel.Corners[MCube::LBF].w = sdf(voxel.Corners[MCube::LBF].xyz);
                     // left-top-back
                     offset = math::vec3(-halfCube,  halfCube, -halfCube);
-                    voxel.LTB = math::vec4(center + offset, 0.0f); 
-                    voxel.LTB.w = sdf(voxel.LTB.xyz);
+                    voxel.Corners[MCube::LTB] = math::vec4(center + offset, 0.0f); 
+                    voxel.Corners[MCube::LTB].w = sdf(voxel.Corners[MCube::LTB].xyz);
                     // right-top-back
                     offset = math::vec3( halfCube,  halfCube, -halfCube);
-                    voxel.RTB = math::vec4(center + offset, 0.0f); 
-                    voxel.RTB.w = sdf(voxel.RTB.xyz);
+                    voxel.Corners[MCube::RTB] = math::vec4(center + offset, 0.0f); 
+                    voxel.Corners[MCube::RTB].w = sdf(voxel.Corners[MCube::RTB].xyz);
                     // right-top-front
                     offset = math::vec3( halfCube,  halfCube,  halfCube);
-                    voxel.RTF = math::vec4(center + offset, 0.0f); 
-                    voxel.RTF.w = sdf(voxel.RTF.xyz);
+                    voxel.Corners[MCube::RTF] = math::vec4(center + offset, 0.0f); 
+                    voxel.Corners[MCube::RTF].w = sdf(voxel.Corners[MCube::RTF].xyz);
                     // left-top-front
                     offset = math::vec3(-halfCube,  halfCube,  halfCube);
-                    voxel.LTF = math::vec4(center + offset, 0.0f); 
-                    voxel.LTF.w = sdf(voxel.LTF.xyz);
+                    voxel.Corners[MCube::LTF] = math::vec4(center + offset, 0.0f); 
+                    voxel.Corners[MCube::LTF].w = sdf(voxel.Corners[MCube::LTF].xyz);
 
                     // given all calculated data, generate this voxel's vertices
                     std::vector<math::vec3> vertList(12);
