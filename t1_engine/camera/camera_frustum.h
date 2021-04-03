@@ -46,22 +46,19 @@ namespace T1
     class CameraFrustum
     {
     public:
-        union
-        {
-            FrustumPlane Planes[6];
-            struct
-            {
-                FrustumPlane Left;
-                FrustumPlane Right;
-                FrustumPlane Top;
-                FrustumPlane Bottom;
-                FrustumPlane Near;
-                FrustumPlane Far;
-            };
-        };
+        FrustumPlane Planes[6];
+
+        // named access to the individual planes (an anonymous struct inside a union would be
+        // shorter, but standard C++ doesn't allow members with constructors in one; only MSVC does)
+        FrustumPlane& Left()   { return Planes[0]; }
+        FrustumPlane& Right()  { return Planes[1]; }
+        FrustumPlane& Top()    { return Planes[2]; }
+        FrustumPlane& Bottom() { return Planes[3]; }
+        FrustumPlane& Near()   { return Planes[4]; }
+        FrustumPlane& Far()    { return Planes[5]; }
 
     public:
-        CameraFrustum() { } // why do I need to define a constructor here? (otherwise I get deleted constructor error) LOOK IT UP!
+        CameraFrustum() { }
 
         void Update(Camera* camera);
 

@@ -19,20 +19,20 @@ namespace T1
         math::vec3 v;
         // left plane
         v = (nearCenter - camera->Right * nearWidth * 0.5f) - camera->Position;
-        Left.SetNormalD(math::cross(math::normalize(v), camera->Up), nearCenter - camera->Right * nearWidth * 0.5f);
+        Left().SetNormalD(math::cross(math::normalize(v), camera->Up), nearCenter - camera->Right * nearWidth * 0.5f);
         // right plane
         v = (nearCenter + camera->Right * nearWidth  * 0.5f) - camera->Position;
-        Right.SetNormalD(math::cross(camera->Up, math::normalize(v)), nearCenter + camera->Right * nearWidth * 0.5f);
+        Right().SetNormalD(math::cross(camera->Up, math::normalize(v)), nearCenter + camera->Right * nearWidth * 0.5f);
         // top plane
         v = (nearCenter + camera->Up * nearHeight * 0.5f) - camera->Position;
-        Top.SetNormalD(math::cross(math::normalize(v), camera->Right), nearCenter + camera->Up * nearHeight * 0.5f);
+        Top().SetNormalD(math::cross(math::normalize(v), camera->Right), nearCenter + camera->Up * nearHeight * 0.5f);
         // bottom plane
         v = (nearCenter - camera->Up * nearHeight * 0.5f) - camera->Position;
-        Bottom.SetNormalD(math::cross(camera->Right, math::normalize(v)), nearCenter - camera->Up * nearHeight * 0.5f);
+        Bottom().SetNormalD(math::cross(camera->Right, math::normalize(v)), nearCenter - camera->Up * nearHeight * 0.5f);
         // near plane
-        Near.SetNormalD(camera->Forward, nearCenter);
+        Near().SetNormalD(camera->Forward, nearCenter);
         // far plane
-        Far.SetNormalD(-camera->Forward, farCenter);
+        Far().SetNormalD(-camera->Forward, farCenter);
     }
     // ------------------------------------------------------------------------
     bool CameraFrustum::Intersect(math::vec3 point)

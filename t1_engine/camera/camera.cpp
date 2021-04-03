@@ -53,7 +53,7 @@ namespace T1
         }
         else
         {
-            return Frustum.Top.D;
+            return Frustum.Top().D;
         }
     }
     // --------------------------------------------------------------------------------------------
@@ -65,7 +65,7 @@ namespace T1
         }
         else
         {
-            return Frustum.Near.D;
+            return Frustum.Near().D;
         }
     }
 
