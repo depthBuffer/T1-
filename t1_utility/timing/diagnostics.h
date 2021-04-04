@@ -3,7 +3,12 @@
 
 #include <iostream>
 #include <string>
-//#include <intrin.h> Cant find this file for some reason
+// __rdtsc() lives in a different header per compiler
+#ifdef _MSC_VER
+#include <intrin.h>
+#else
+#include <x86intrin.h>
+#endif
 
 #include "../std_types.h"
 
