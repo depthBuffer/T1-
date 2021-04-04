@@ -39,6 +39,10 @@ namespace T1
         std::string source, line;
         while (std::getline(file, line))
         {
+            // files with Windows (CRLF) line endings keep a trailing '\r' when read on Linux
+            if (!line.empty() && line.back() == '\r')
+                line.pop_back();
+
             // if we encounter an #include line, include other shader source
             if (line.substr(0, 8) == "#include")
             {
