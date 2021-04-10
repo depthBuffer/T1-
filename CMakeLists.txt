@@ -66,7 +66,12 @@ add_executable(demo
   demo/program.cpp
 )
 
-set(T1_DEMOS demo)
+# second demo: the Foundry Yard environment
+add_executable(foundry
+  demo/foundry.cpp
+)
+
+set(T1_DEMOS demo foundry)
 
 foreach(T1_DEMO ${T1_DEMOS})
   target_include_directories(${T1_DEMO} PUBLIC ${PROJECT_SOURCE_DIR}/)
