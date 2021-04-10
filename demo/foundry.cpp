@@ -43,6 +43,71 @@ T1::Material* CreatePBRMaterial(const std::string& folder, bool hasAO)
     return mat;
 }
 
+/* NOTE:
+
+  The engine's procedural meshes (plane, cube, sphere, torus) don't generate tangent space
+  vectors (Mesh::calculateTangents() is an unfinished stub), and the deferred G-buffer shader needs
+  them for normal mapping; without them those meshes shade black. This helper derives per-vertex
+  tangents/bitangents from each triangle's positions and UVs and re-uploads the mesh.
+
+*/
+void GenerateTangents(T1::Mesh& mesh)
+{
+    const size_t vertexCount = mesh.Positions.size();
+    if (vertexCount == 0 || mesh.UV.size() != vertexCount || mesh.Normals.size() != vertexCount)
+        return;
+
+    std::vector<math::vec3> tangents(vertexCount, math::vec3(0.0f));
+    std::vector<math::vec3> bitangents(vertexCount, math::vec3(0.0f));
+
+    auto accumulate = [&](unsigned int i0, unsigned int i1, unsigned int i2) {
+        if (i0 == i1 || i1 == i2 || i0 == i2) // degenerate (e.g. triangle strip restarts)
+            return;
+        math::vec3 e1 = mesh.Positions[i1] - mesh.Positions[i0];
+        math::vec3 e2 = mesh.Positions[i2] - mesh.Positions[i0];
+        math::vec2 d1 = mesh.UV[i1] - mesh.UV[i0];
+        math::vec2 d2 = mesh.UV[i2] - mesh.UV[i0];
+        float det = d1.x * d2.y - d2.x * d1.y;
+        if (std::fabs(det) < 1e-8f)
+            return;
+        float r = 1.0f / det;
+        math::vec3 t = (e1 * d2.y - e2 * d1.y) * r;
+        math::vec3 b = (e2 * d1.x - e1 * d2.x) * r;
+        tangents[i0]   = tangents[i0] + t;   tangents[i1]   = tangents[i1] + t;   tangents[i2]   = tangents[i2] + t;
+        bitangents[i0] = bitangents[i0] + b; bitangents[i1] = bitangents[i1] + b; bitangents[i2] = bitangents[i2] + b;
+    };
+
+    const std::vector<unsigned int>& idx = mesh.Indices;
+    if (mesh.Topology == T1::TRIANGLE_STRIP)
+    {
+        for (size_t i = 0; i + 2 < idx.size(); ++i)
+            accumulate(idx[i], idx[i + 1], idx[i + 2]);
+    }
+    else
+    {
+        for (size_t i = 0; i + 2 < idx.size(); i += 3)
+            accumulate(idx[i], idx[i + 1], idx[i + 2]);
+    }
+
+    // orthonormalize against the normal (Gram-Schmidt) and keep the bitangent's handedness
+    for (size_t i = 0; i < vertexCount; ++i)
+    {
+        math::vec3 n = math::normalize(mesh.Normals[i]);
+        math::vec3 t = tangents[i] - n * math::dot(n, tangents[i]);
+        if (math::length(t) < 1e-6f) // no usable UV gradient (e.g. sphere poles): pick any perpendicular
+            t = math::cross(n, std::fabs(n.y) < 0.99f ? math::vec3(0.0f, 1.0f, 0.0f) : math::vec3(1.0f, 0.0f, 0.0f));
+        t = math::normalize(t);
+        math::vec3 b = math::cross(n, t);
+        if (math::dot(b, bitangents[i]) < 0.0f)
+            b = b * -1.0f;
+        tangents[i]   = t;
+        bitangents[i] = b;
+    }
+
+    mesh.SetTangents(tangents, bitangents);
+    mesh.Finalize();
+}
+
 int main(int argc, char *argv[])
 {
     /*
@@ -93,6 +158,17 @@ int main(int argc, char *argv[])
     // meshes
     T1::Plane  floorTile(16, 16);
     T1::Cube   cube;
+
+    // The engine's plane mesh has its normals facing +Z while its triangle winding (front face)
+    // faces -Z. The deferred pass always culls back faces (material cull settings only apply to
+    // forward-rendered materials), so flip the floor's normals to match its front face; the
+    // tiles are then rotated to face up (see the yard setup below).
+    for (math::vec3& normal : floorTile.Normals)
+        normal = normal * -1.0f;
+
+    T1::Mesh* normalMapped[] = { &floorTile, &cube };
+    for (T1::Mesh* mesh : normalMapped)
+        GenerateTangents(*mesh);
 
     // materials
     T1::Material* matRust    = CreatePBRMaterial("rusted metal", true);
