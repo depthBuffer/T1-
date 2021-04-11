@@ -148,7 +148,7 @@ int main(int argc, char *argv[])
         renderer->SetCamera(&camera);
     Log::Message("Render system initialized", LOG_INIT);
 
-    // camera starts at the open west side of the yard
+    // cameras: the fly camera starts at the open west side of the yard, looking at the gyroscope
     float aspect = renderer->GetRenderSize().x / renderer->GetRenderSize().y;
     camera.SetPerspective(math::Deg2Rad(60.0f), aspect, 0.1f, 100.0f);
     camera.Yaw   =   0.0f;
@@ -158,6 +158,10 @@ int main(int argc, char *argv[])
     // meshes
     T1::Plane  floorTile(16, 16);
     T1::Cube   cube;
+    T1::Sphere orbSphere(128, 128);
+    T1::Torus  ringOuter(2.20f, 0.15f, 64, 16);
+    T1::Torus  ringMiddle(1.75f, 0.13f, 64, 16);
+    T1::Torus  ringInner(1.30f, 0.11f, 64, 16);
 
     // The engine's plane mesh has its normals facing +Z while its triangle winding (front face)
     // faces -Z. The deferred pass always culls back faces (material cull settings only apply to
@@ -166,12 +170,15 @@ int main(int argc, char *argv[])
     for (math::vec3& normal : floorTile.Normals)
         normal = normal * -1.0f;
 
-    T1::Mesh* normalMapped[] = { &floorTile, &cube };
+    T1::Mesh* normalMapped[] = { &floorTile, &cube, &ringOuter, &ringMiddle, &ringInner };
     for (T1::Mesh* mesh : normalMapped)
         GenerateTangents(*mesh);
 
     // materials
     T1::Material* matRust    = CreatePBRMaterial("rusted metal", true);
+    T1::Material* matGold    = CreatePBRMaterial("gold", true);
+    T1::Material* matCopper  = CreatePBRMaterial("copper", false);
+    T1::Material* matPlastic = CreatePBRMaterial("plastic", true);
 
     T1::Material* matCrate = renderer->CreateMaterial();
     matCrate->SetTexture("TexAlbedo",    T1::Resources::LoadTexture("crate albedo", "textures/crate.png", GL_TEXTURE_2D, GL_RGB, true), 3);
@@ -179,6 +186,18 @@ int main(int argc, char *argv[])
     matCrate->SetTexture("TexMetallic",  T1::Resources::LoadTexture("black", "textures/black.png"), 5);
     matCrate->SetTexture("TexRoughness", T1::Resources::LoadTexture("white", "textures/white.png"), 6);
     matCrate->SetTexture("TexAO",        T1::Resources::LoadTexture("white", "textures/white.png"), 7);
+
+    T1::Material* matGlass = renderer->CreateMaterial("glass");
+
+    T1::Shader*   plasmaOrbShader = T1::Resources::LoadShader("plasma orb", "shaders/custom/plasma_orb.vs", "shaders/custom/plasma_orb.fs");
+    T1::Material* matPlasmaOrb    = renderer->CreateCustomMaterial(plasmaOrbShader);
+    matPlasmaOrb->Cull     = false;
+    matPlasmaOrb->Blend    = true;
+    matPlasmaOrb->BlendSrc = GL_ONE;
+    matPlasmaOrb->BlendDst = GL_ONE;
+    matPlasmaOrb->SetTexture("TexPerllin", T1::Resources::LoadTexture("perlin noise", "textures/perlin.png"), 0);
+    matPlasmaOrb->SetFloat("Strength", 1.2f);
+    matPlasmaOrb->SetFloat("Speed", 0.1f);
 
     // all top-level nodes we push to the renderer every frame
     std::vector<T1::SceneNode*> renderables;
@@ -229,6 +248,36 @@ int main(int argc, char *argv[])
             }
         }
     }
+    // a loose stack of crates near the entrance, with a glass cube resting on top
+    addNode(&cube, matCrate, math::vec3(-8.5f, 0.75f, 6.5f), math::vec3(1.5f), math::vec4(math::vec3(0.0f, 1.0f, 0.0f), 0.30f));
+    addNode(&cube, matCrate, math::vec3(-8.3f, 0.75f, 8.2f), math::vec3(1.5f), math::vec4(math::vec3(0.0f, 1.0f, 0.0f), -0.15f));
+    addNode(&cube, matCrate, math::vec3(-8.4f, 2.25f, 7.3f), math::vec3(1.5f), math::vec4(math::vec3(0.0f, 1.0f, 0.0f), 0.10f));
+    addNode(&cube, matGlass, math::vec3(-8.4f, 3.50f, 7.3f), math::vec3(1.0f), math::vec4(math::vec3(0.0f, 1.0f, 0.0f), 0.60f));
+    addNode(&cube, matCrate, math::vec3(-8.0f, 0.75f, -7.0f), math::vec3(1.5f), math::vec4(math::vec3(0.0f, 1.0f, 0.0f), -0.40f));
+
+    /*
+
+      Centre piece: a raised platform with a gyroscope of three nested rings (gold, copper and
+      plastic) spinning around a plasma orb. The rings form a small scene-graph hierarchy so each
+      ring's rotation compounds on top of its parent's.
+
+    */
+    addNode(&cube, matRust, math::vec3(0.0f, 0.2f, 0.0f), math::vec3(5.0f, 0.4f, 5.0f));
+    const float corner = 1.9f;
+    addNode(&cube, matGlass, math::vec3( corner, 0.8f,  corner), math::vec3(0.8f));
+    addNode(&cube, matGlass, math::vec3(-corner, 0.8f,  corner), math::vec3(0.8f));
+    addNode(&cube, matGlass, math::vec3( corner, 0.8f, -corner), math::vec3(0.8f));
+    addNode(&cube, matGlass, math::vec3(-corner, 0.8f, -corner), math::vec3(0.8f));
+
+    const math::vec3 gyroCenter(0.0f, 3.2f, 0.0f);
+    T1::SceneNode* gyroOuter  = T1::Scene::MakeSceneNode(&ringOuter,  matGold);
+    T1::SceneNode* gyroMiddle = T1::Scene::MakeSceneNode(&ringMiddle, matCopper);
+    T1::SceneNode* gyroInner  = T1::Scene::MakeSceneNode(&ringInner,  matPlastic);
+    gyroOuter->AddChild(gyroMiddle);
+    gyroMiddle->AddChild(gyroInner);
+    gyroOuter->SetPosition(gyroCenter);
+
+    addNode(&orbSphere, matPlasmaOrb, gyroCenter, math::vec3(0.55f));
 
     /*
 
@@ -279,9 +328,21 @@ int main(int argc, char *argv[])
             camera.InputKey(deltaTime, T1::CAMERA_DOWN);
         camera.Update(deltaTime);
 
+        // gyroscope rings and plasma orb
+        gyroOuter->SetRotation(math::vec4(math::vec3(1.0f, 0.0f, 0.0f), t * 0.7f));
+        gyroMiddle->SetRotation(math::vec4(math::vec3(0.0f, 1.0f, 0.0f), t * 1.1f));
+        gyroInner->SetRotation(math::vec4(math::vec3(1.0f, 0.0f, 0.0f), t * 1.6f));
+        matPlasmaOrb->SetFloat("Time", t);
+
         // push render commands
         for (int i = 0; i < (int)renderables.size(); ++i)
             renderer->PushRender(renderables[i]);
+
+        // the gyroscope rings are pushed individually from their (hierarchical) world transforms
+        gyroOuter->UpdateTransform(true);
+        renderer->PushRender(gyroOuter->Mesh,  gyroOuter->Material,  gyroOuter->GetTransform(),  gyroOuter->GetPrevTransform());
+        renderer->PushRender(gyroMiddle->Mesh, gyroMiddle->Material, gyroMiddle->GetTransform(), gyroMiddle->GetPrevTransform());
+        renderer->PushRender(gyroInner->Mesh,  gyroInner->Material,  gyroInner->GetTransform(),  gyroInner->GetPrevTransform());
 
         renderer->RenderPushedCommands();
 
