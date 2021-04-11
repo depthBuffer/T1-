@@ -158,6 +158,7 @@ int main(int argc, char *argv[])
     // meshes
     T1::Plane  floorTile(16, 16);
     T1::Cube   cube;
+    T1::Sphere sphere(64, 64);
     T1::Sphere orbSphere(128, 128);
     T1::Torus  ringOuter(2.20f, 0.15f, 64, 16);
     T1::Torus  ringMiddle(1.75f, 0.13f, 64, 16);
@@ -170,7 +171,7 @@ int main(int argc, char *argv[])
     for (math::vec3& normal : floorTile.Normals)
         normal = normal * -1.0f;
 
-    T1::Mesh* normalMapped[] = { &floorTile, &cube, &ringOuter, &ringMiddle, &ringInner };
+    T1::Mesh* normalMapped[] = { &floorTile, &cube, &sphere, &ringOuter, &ringMiddle, &ringInner };
     for (T1::Mesh* mesh : normalMapped)
         GenerateTangents(*mesh);
 
@@ -186,6 +187,9 @@ int main(int argc, char *argv[])
     matCrate->SetTexture("TexMetallic",  T1::Resources::LoadTexture("black", "textures/black.png"), 5);
     matCrate->SetTexture("TexRoughness", T1::Resources::LoadTexture("white", "textures/white.png"), 6);
     matCrate->SetTexture("TexAO",        T1::Resources::LoadTexture("white", "textures/white.png"), 7);
+
+    T1::Material* matChecker = renderer->CreateMaterial(); // engine default: checkerboard albedo/roughness
+    matChecker->SetTexture("TexAO", T1::Resources::LoadTexture("white", "textures/white.png"), 7);
 
     T1::Material* matGlass = renderer->CreateMaterial("glass");
 
@@ -281,6 +285,33 @@ int main(int argc, char *argv[])
 
     /*
 
+      Material gallery: six pedestals in a ring around the platform, each showing one material on
+      a sphere and lit by its own flickering lantern.
+
+    */
+    T1::Material* galleryMaterials[6] = { matGold, matCopper, matPlastic, matRust, matGlass, matChecker };
+    std::vector<T1::PointLight> lanterns(6);
+    std::vector<float>          lanternBaseIntensity(6);
+    for (int i = 0; i < 6; ++i)
+    {
+        float angle = math::Deg2Rad(30.0f + 60.0f * i);
+        math::vec3 dir(std::cos(angle), 0.0f, std::sin(angle));
+        math::vec3 base = dir * 7.0f;
+
+        addNode(&cube,   matRust,             base + math::vec3(0.0f, 0.7f, 0.0f),  math::vec3(1.0f, 1.4f, 1.0f));
+        addNode(&sphere, galleryMaterials[i], base + math::vec3(0.0f, 2.05f, 0.0f), math::vec3(0.6f));
+
+        T1::PointLight& lantern = lanterns[i];
+        lantern.Position   = base - dir * 1.4f + math::vec3(0.0f, 2.8f, 0.0f);
+        lantern.Color      = math::vec3(1.0f, 0.62f, 0.28f);
+        lantern.Radius     = 3.5f;
+        lantern.Intensity  = 30.0f;
+        lantern.RenderMesh = true;
+        lanternBaseIntensity[i] = lantern.Intensity;
+    }
+
+    /*
+
       Lighting. Light objects are referenced by pointer from the renderer, so all containers are
       fully populated before any light is registered and never resized afterwards.
 
@@ -290,6 +321,9 @@ int main(int argc, char *argv[])
     sun.Color     = math::vec3(1.0f, 0.55f, 0.25f);
     sun.Intensity = 30.0f;
     renderer->AddLight(&sun);
+
+    for (int i = 0; i < (int)lanterns.size(); ++i)
+        renderer->AddLight(&lanterns[i]);
 
     while (!glfwWindowShouldClose(window))
     {
@@ -327,6 +361,13 @@ int main(int argc, char *argv[])
         if (keysPressed[GLFW_KEY_Q])
             camera.InputKey(deltaTime, T1::CAMERA_DOWN);
         camera.Update(deltaTime);
+
+        // lanterns flicker
+        for (int i = 0; i < (int)lanterns.size(); ++i)
+        {
+            float flicker = std::sin(t * 7.3f + i * 1.7f) * 0.5f + std::sin(t * 13.1f + i * 4.1f) * 0.3f;
+            lanterns[i].Intensity = lanternBaseIntensity[i] * (1.0f + 0.25f * flicker);
+        }
 
         // gyroscope rings and plasma orb
         gyroOuter->SetRotation(math::vec4(math::vec3(1.0f, 0.0f, 0.0f), t * 0.7f));
