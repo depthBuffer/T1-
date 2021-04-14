@@ -7,6 +7,8 @@
 #include <t1_utility/logging/log.h>
 #include <t1_engine/t1_engine.h>
 
+#include <t1_utility/random/random.h>
+
 #include <GLFW/glfw3.h>
 
 void framebufferSizeFunc(GLFWwindow *window, int width, int height);
@@ -26,6 +28,16 @@ bool keysActive[1024];
 bool renderGUI     = false;
 bool cursorVisible = true;  // forces the cursor to be captured on the first frame
 bool firstMouse    = true;
+
+struct OrbitLight
+{
+    T1::PointLight Light;
+    float Radius;
+    float Height;
+    float Phase;
+    float Speed;
+    float Bob;
+};
 
 // creates a deferred PBR material from one of the texture sets in textures/pbr/<folder>/
 T1::Material* CreatePBRMaterial(const std::string& folder, bool hasAO)
@@ -325,6 +337,24 @@ int main(int argc, char *argv[])
     for (int i = 0; i < (int)lanterns.size(); ++i)
         renderer->AddLight(&lanterns[i]);
 
+    // fireflies: a few dozen small coloured lights orbiting the gyroscope
+    std::vector<OrbitLight> fireflies(24);
+    for (int i = 0; i < (int)fireflies.size(); ++i)
+    {
+        OrbitLight& f = fireflies[i];
+        f.Radius = 3.2f + Random::Uniliteral() * 2.5f;
+        f.Height = 0.8f + Random::Uniliteral() * 4.0f;
+        f.Phase  = Random::Uniliteral() * 2.0f * PI;
+        f.Speed  = (0.25f + Random::Uniliteral() * 0.5f) * (i % 2 == 0 ? 1.0f : -1.0f);
+        f.Bob    = 0.3f + Random::Uniliteral() * 0.6f;
+        f.Light.Color      = math::vec3(0.3f + Random::Uniliteral() * 0.7f, 0.3f + Random::Uniliteral() * 0.7f, 0.3f + Random::Uniliteral() * 0.7f);
+        f.Light.Radius     = 1.5f + Random::Uniliteral() * 1.0f;
+        f.Light.Intensity  = 15.0f + Random::Uniliteral() * 25.0f;
+        f.Light.RenderMesh = true;
+    }
+    for (int i = 0; i < (int)fireflies.size(); ++i)
+        renderer->AddLight(&fireflies[i].Light);
+
     while (!glfwWindowShouldClose(window))
     {
         glfwPollEvents();
@@ -367,6 +397,14 @@ int main(int argc, char *argv[])
         {
             float flicker = std::sin(t * 7.3f + i * 1.7f) * 0.5f + std::sin(t * 13.1f + i * 4.1f) * 0.3f;
             lanterns[i].Intensity = lanternBaseIntensity[i] * (1.0f + 0.25f * flicker);
+        }
+
+        // fireflies orbit and bob around the gyroscope
+        for (int i = 0; i < (int)fireflies.size(); ++i)
+        {
+            OrbitLight& f = fireflies[i];
+            float a = f.Phase + t * f.Speed;
+            f.Light.Position = math::vec3(std::cos(a) * f.Radius, f.Height + std::sin(t * 1.3f + f.Phase) * f.Bob, std::sin(a) * f.Radius);
         }
 
         // gyroscope rings and plasma orb
