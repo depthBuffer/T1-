@@ -29,6 +29,22 @@ bool renderGUI     = false;
 bool cursorVisible = true;  // forces the cursor to be captured on the first frame
 bool firstMouse    = true;
 
+// showcase state (driven by hotkeys and the "Foundry Yard" GUI window)
+int   timeOfDay      = 1;     // 0 = day, 1 = dusk, 2 = night
+
+struct SunPreset
+{
+    math::vec3 Direction;
+    math::vec3 Color;
+    float      Intensity;
+};
+const SunPreset sunPresets[3] = {
+    { math::vec3( 0.30f, -1.00f,  0.20f), math::vec3(1.00f, 0.95f, 0.85f), 40.0f }, // day
+    { math::vec3( 0.75f, -0.40f, -0.35f), math::vec3(1.00f, 0.55f, 0.25f), 30.0f }, // dusk: low sun from the west
+    { math::vec3( 0.40f, -0.80f, -0.30f), math::vec3(0.35f, 0.45f, 1.00f),  2.0f }, // night
+};
+const char* timeOfDayNames[3] = { "Day", "Dusk", "Night" };
+
 struct OrbitLight
 {
     T1::PointLight Light;
@@ -329,9 +345,9 @@ int main(int argc, char *argv[])
 
     */
     T1::DirectionalLight sun;
-    sun.Direction = math::normalize(math::vec3(0.75f, -0.40f, -0.35f));
-    sun.Color     = math::vec3(1.0f, 0.55f, 0.25f);
-    sun.Intensity = 30.0f;
+    sun.Direction = math::normalize(sunPresets[timeOfDay].Direction);
+    sun.Color     = sunPresets[timeOfDay].Color;
+    sun.Intensity = sunPresets[timeOfDay].Intensity;
     renderer->AddLight(&sun);
 
     for (int i = 0; i < (int)lanterns.size(); ++i)
@@ -376,6 +392,7 @@ int main(int argc, char *argv[])
             return false;
         };
         if (pressedOnce(GLFW_KEY_TAB)) renderGUI    = !renderGUI;
+        if (pressedOnce(GLFW_KEY_N))   timeOfDay    = (timeOfDay + 1) % 3;
 
         // camera
         if (keysPressed[GLFW_KEY_W] || keysPressed[GLFW_KEY_UP])
@@ -391,6 +408,17 @@ int main(int argc, char *argv[])
         if (keysPressed[GLFW_KEY_Q])
             camera.InputKey(deltaTime, T1::CAMERA_DOWN);
         camera.Update(deltaTime);
+
+        // sun: ease towards the selected time-of-day preset
+        {
+            const SunPreset& preset = sunPresets[timeOfDay];
+            float blend = math::clamp01(deltaTime * 1.5f);
+            math::vec3 targetDir = math::normalize(preset.Direction);
+            math::vec3 targetCol = preset.Color;
+            sun.Direction = math::normalize(math::lerp(sun.Direction, targetDir, blend));
+            sun.Color     = math::lerp(sun.Color, targetCol, blend);
+            sun.Intensity = math::lerp(sun.Intensity, preset.Intensity, blend);
+        }
 
         // lanterns flicker
         for (int i = 0; i < (int)lanterns.size(); ++i)
