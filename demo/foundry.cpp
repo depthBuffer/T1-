@@ -338,6 +338,11 @@ int main(int argc, char *argv[])
         lanternBaseIntensity[i] = lantern.Intensity;
     }
 
+    // background: the engine's pre-filtered HDR sky capture
+    T1::Background* background = new T1::Background;
+    background->SetCubemap(renderer->GetSkypCature()->Prefiltered);
+    background->Material->SetFloat("lodLevel", 1.5f);
+
     /*
 
       Lighting. Light objects are referenced by pointer from the renderer, so all containers are
@@ -370,6 +375,24 @@ int main(int argc, char *argv[])
     }
     for (int i = 0; i < (int)fireflies.size(); ++i)
         renderer->AddLight(&fireflies[i].Light);
+
+    /*
+
+      Bake irradiance probes for diffuse global illumination: an inner ring around the platform,
+      an outer ring between the gallery and the crate walls, and one above the gyroscope.
+
+    */
+    {
+        for (int i = 0; i < 8; ++i)
+        {
+            float angle = 2.0f * PI * i / 8.0f;
+            renderer->AddIrradianceProbe(math::vec3(std::cos(angle) * 4.5f, 1.5f, std::sin(angle) * 4.5f), 4.5f);
+            renderer->AddIrradianceProbe(math::vec3(std::cos(angle) * 9.5f, 1.8f, std::sin(angle) * 9.5f), 5.0f);
+        }
+        renderer->AddIrradianceProbe(math::vec3(0.0f, 5.5f, 0.0f), 6.0f);
+
+        renderer->BakeProbes();
+    }
 
     while (!glfwWindowShouldClose(window))
     {
@@ -450,6 +473,8 @@ int main(int argc, char *argv[])
         renderer->PushRender(gyroOuter->Mesh,  gyroOuter->Material,  gyroOuter->GetTransform(),  gyroOuter->GetPrevTransform());
         renderer->PushRender(gyroMiddle->Mesh, gyroMiddle->Material, gyroMiddle->GetTransform(), gyroMiddle->GetPrevTransform());
         renderer->PushRender(gyroInner->Mesh,  gyroInner->Material,  gyroInner->GetTransform(),  gyroInner->GetPrevTransform());
+
+        renderer->PushRender(background);
 
         renderer->RenderPushedCommands();
 
