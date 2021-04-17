@@ -30,6 +30,7 @@ bool cursorVisible = true;  // forces the cursor to be captured on the first fra
 bool firstMouse    = true;
 
 // showcase state (driven by hotkeys and the "Foundry Yard" GUI window)
+bool  lightShow      = false;
 int   timeOfDay      = 1;     // 0 = day, 1 = dusk, 2 = night
 
 struct SunPreset
@@ -376,6 +377,22 @@ int main(int argc, char *argv[])
     for (int i = 0; i < (int)fireflies.size(); ++i)
         renderer->AddLight(&fireflies[i].Light);
 
+    // light show: 128 extra lights sweeping over the whole yard (toggle with L)
+    std::vector<OrbitLight> showLights(128);
+    for (int i = 0; i < (int)showLights.size(); ++i)
+    {
+        OrbitLight& s = showLights[i];
+        s.Radius = 2.0f + Random::Uniliteral() * 8.5f;
+        s.Height = 0.4f + Random::Uniliteral() * 3.0f;
+        s.Phase  = Random::Uniliteral() * 2.0f * PI;
+        s.Speed  = (0.1f + Random::Uniliteral() * 0.4f) * (i % 3 == 0 ? -1.0f : 1.0f);
+        s.Bob    = 0.2f + Random::Uniliteral() * 0.8f;
+        s.Light.Color  = math::vec3(Random::Uniliteral(), Random::Uniliteral(), Random::Uniliteral());
+        s.Light.Radius = 1.0f + Random::Uniliteral() * 2.0f;
+    }
+    for (int i = 0; i < (int)showLights.size(); ++i)
+        renderer->AddLight(&showLights[i].Light);
+
     /*
 
       Bake irradiance probes for diffuse global illumination: an inner ring around the platform,
@@ -415,6 +432,7 @@ int main(int argc, char *argv[])
             return false;
         };
         if (pressedOnce(GLFW_KEY_TAB)) renderGUI    = !renderGUI;
+        if (pressedOnce(GLFW_KEY_L))   lightShow    = !lightShow;
         if (pressedOnce(GLFW_KEY_N))   timeOfDay    = (timeOfDay + 1) % 3;
 
         // camera
@@ -456,6 +474,25 @@ int main(int argc, char *argv[])
             OrbitLight& f = fireflies[i];
             float a = f.Phase + t * f.Speed;
             f.Light.Position = math::vec3(std::cos(a) * f.Radius, f.Height + std::sin(t * 1.3f + f.Phase) * f.Bob, std::sin(a) * f.Radius);
+        }
+
+        // light show lights; when disabled they are parked far below the yard so they get culled
+        for (int i = 0; i < (int)showLights.size(); ++i)
+        {
+            OrbitLight& s = showLights[i];
+            if (lightShow)
+            {
+                float a = s.Phase + t * s.Speed;
+                s.Light.Position   = math::vec3(std::cos(a) * s.Radius, s.Height + std::sin(t * 0.9f + s.Phase) * s.Bob, std::sin(a) * s.Radius);
+                s.Light.Intensity  = 20.0f + 15.0f * std::sin(t * 2.0f + s.Phase);
+                s.Light.RenderMesh = true;
+            }
+            else
+            {
+                s.Light.Position   = math::vec3(0.0f, -500.0f, 0.0f);
+                s.Light.Intensity  = 0.0f;
+                s.Light.RenderMesh = false;
+            }
         }
 
         // gyroscope rings and plasma orb
