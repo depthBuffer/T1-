@@ -21,6 +21,7 @@ const float PI = 3.14159265f;
 
 T1::Renderer* renderer;
 T1::FlyCamera camera(math::vec3(-15.0f, 3.5f, 0.0f), math::vec3(1.0f, 0.0f, 0.0f));
+T1::Camera    cinematicCamera(math::vec3(18.0f, 6.0f, 0.0f), math::vec3(-1.0f, 0.0f, 0.0f), math::vec3(0.0f, 1.0f, 0.0f));
 float deltaTime     = 0.0f;
 float lastFrameTime = 0.0f;
 bool keysPressed[1024];
@@ -30,6 +31,7 @@ bool cursorVisible = true;  // forces the cursor to be captured on the first fra
 bool firstMouse    = true;
 
 // showcase state (driven by hotkeys and the "Foundry Yard" GUI window)
+bool  cinematic      = false;
 bool  lightShow      = false;
 int   timeOfDay      = 1;     // 0 = day, 1 = dusk, 2 = night
 
@@ -183,6 +185,7 @@ int main(int argc, char *argv[])
     camera.Yaw   =   0.0f;
     camera.Pitch = -10.0f;
     camera.InputMouse(0.0f, -100.0f); // target pitch of -10 degrees (mouse delta * sensitivity)
+    cinematicCamera.SetPerspective(math::Deg2Rad(50.0f), aspect, 0.1f, 100.0f);
 
     // meshes
     T1::Plane  floorTile(16, 16);
@@ -432,23 +435,41 @@ int main(int argc, char *argv[])
             return false;
         };
         if (pressedOnce(GLFW_KEY_TAB)) renderGUI    = !renderGUI;
+        if (pressedOnce(GLFW_KEY_C))   cinematic    = !cinematic;
         if (pressedOnce(GLFW_KEY_L))   lightShow    = !lightShow;
         if (pressedOnce(GLFW_KEY_N))   timeOfDay    = (timeOfDay + 1) % 3;
 
         // camera
-        if (keysPressed[GLFW_KEY_W] || keysPressed[GLFW_KEY_UP])
-            camera.InputKey(deltaTime, T1::CAMERA_FORWARD);
-        if (keysPressed[GLFW_KEY_S] || keysPressed[GLFW_KEY_DOWN])
-            camera.InputKey(deltaTime, T1::CAMERA_BACK);
-        if (keysPressed[GLFW_KEY_A] || keysPressed[GLFW_KEY_LEFT])
-            camera.InputKey(deltaTime, T1::CAMERA_LEFT);
-        if (keysPressed[GLFW_KEY_D] || keysPressed[GLFW_KEY_RIGHT])
-            camera.InputKey(deltaTime, T1::CAMERA_RIGHT);
-        if (keysPressed[GLFW_KEY_E])
-            camera.InputKey(deltaTime, T1::CAMERA_UP);
-        if (keysPressed[GLFW_KEY_Q])
-            camera.InputKey(deltaTime, T1::CAMERA_DOWN);
-        camera.Update(deltaTime);
+        if (cinematic)
+        {
+            // orbit inside the crate walls (inner face at ~10.5 units), above the gallery pedestals
+            float angle = t * 0.12f;
+            cinematicCamera.Position = math::vec3(std::cos(angle) * 9.3f, 5.0f + std::sin(t * 0.25f) * 1.2f, std::sin(angle) * 9.3f);
+            math::vec3 target = gyroCenter - math::vec3(0.0f, 1.0f, 0.0f);
+            cinematicCamera.Forward = math::normalize(target - cinematicCamera.Position);
+            cinematicCamera.Right   = math::normalize(math::cross(cinematicCamera.Forward, math::vec3(0.0f, 1.0f, 0.0f)));
+            cinematicCamera.Up      = math::cross(cinematicCamera.Right, cinematicCamera.Forward);
+            cinematicCamera.UpdateView();
+            cinematicCamera.Update(deltaTime);
+            renderer->SetCamera(&cinematicCamera);
+        }
+        else
+        {
+            if (keysPressed[GLFW_KEY_W] || keysPressed[GLFW_KEY_UP])
+                camera.InputKey(deltaTime, T1::CAMERA_FORWARD);
+            if (keysPressed[GLFW_KEY_S] || keysPressed[GLFW_KEY_DOWN])
+                camera.InputKey(deltaTime, T1::CAMERA_BACK);
+            if (keysPressed[GLFW_KEY_A] || keysPressed[GLFW_KEY_LEFT])
+                camera.InputKey(deltaTime, T1::CAMERA_LEFT);
+            if (keysPressed[GLFW_KEY_D] || keysPressed[GLFW_KEY_RIGHT])
+                camera.InputKey(deltaTime, T1::CAMERA_RIGHT);
+            if (keysPressed[GLFW_KEY_E])
+                camera.InputKey(deltaTime, T1::CAMERA_UP);
+            if (keysPressed[GLFW_KEY_Q])
+                camera.InputKey(deltaTime, T1::CAMERA_DOWN);
+            camera.Update(deltaTime);
+            renderer->SetCamera(&camera);
+        }
 
         // sun: ease towards the selected time-of-day preset
         {
@@ -545,6 +566,7 @@ void framebufferSizeFunc(GLFWwindow *window, int width, int height)
         return;
     renderer->SetRenderSize(width, height);
     camera.SetPerspective(math::Deg2Rad(60.0f), (float)width / (float)height, 0.1f, 100.0f);
+    cinematicCamera.SetPerspective(math::Deg2Rad(50.0f), (float)width / (float)height, 0.1f, 100.0f);
 }
 
 void keyFunc(GLFWwindow *window, int key, int scancode, int action, int mods)
@@ -578,7 +600,7 @@ void mousePosFunc(GLFWwindow *window, double xpos, double ypos)
 
     lastX = (float)xpos;
     lastY = (float)ypos;
-    if (!renderGUI)
+    if (!renderGUI && !cinematic)
     {
         camera.InputMouse(xoffset, yoffset);
     }
@@ -591,6 +613,7 @@ void mouseButtonFunc(GLFWwindow*, int button, int action, int mods)
 
 void mouseScrollFunc(GLFWwindow*, double xoffset, double yoffset)
 {
-    camera.InputScroll((float)xoffset, (float)yoffset);
+    if (!cinematic)
+        camera.InputScroll((float)xoffset, (float)yoffset);
     T1::InputScroll((float)yoffset);
 }
