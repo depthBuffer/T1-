@@ -6,10 +6,31 @@
 #include <t1_math/t1_math.h>
 #include <t1_utility/logging/log.h>
 #include <t1_engine/t1_engine.h>
+#include <t1_engine/imgui/imgui.h>
 
 #include <t1_utility/random/random.h>
 
 #include <GLFW/glfw3.h>
+
+/* NOTE:
+
+  Foundry Yard: a second T1 demo environment, built entirely from the assets and rendering
+  features that ship with the engine:
+
+  - deferred PBR materials (gold, copper, plastic, rusted metal, wooden crates, checker),
+  - forward-rendered glass and an additive, vertex-displaced plasma orb (custom material),
+  - a directional sun with shadow mapping and time-of-day presets,
+  - dozens of deferred point lights (lanterns, fireflies and an optional light show),
+  - image based lighting from the HDR sky and baked irradiance probes,
+  - post-processing (SSAO, bloom, motion blur, vignette, sepia) and custom post-process shaders,
+  - a scene graph (the gyroscope rings are parented to one another),
+  - a fly camera and a cinematic orbit camera.
+
+  Controls: WASD/arrows move, Q/E down/up, mouse look, TAB toggles the GUI.
+            C cinematic camera, N cycles day/dusk/night, L toggles the light show,
+            1/2 toggle the custom post-processing shaders.
+
+*/
 
 void framebufferSizeFunc(GLFWwindow *window, int width, int height);
 void keyFunc(GLFWwindow *window, int key, int scancode, int action, int mods);
@@ -36,6 +57,9 @@ bool  lightShow      = false;
 bool  postInvert     = false;
 bool  postBlueTint   = false;
 int   timeOfDay      = 1;     // 0 = day, 1 = dusk, 2 = night
+float gyroSpeed      = 1.0f;
+float fireflySpeed   = 1.0f;
+float lanternFlicker = 1.0f;
 
 struct SunPreset
 {
@@ -496,14 +520,14 @@ int main(int argc, char *argv[])
         for (int i = 0; i < (int)lanterns.size(); ++i)
         {
             float flicker = std::sin(t * 7.3f + i * 1.7f) * 0.5f + std::sin(t * 13.1f + i * 4.1f) * 0.3f;
-            lanterns[i].Intensity = lanternBaseIntensity[i] * (1.0f + 0.25f * flicker);
+            lanterns[i].Intensity = lanternBaseIntensity[i] * (1.0f + 0.25f * lanternFlicker * flicker);
         }
 
         // fireflies orbit and bob around the gyroscope
         for (int i = 0; i < (int)fireflies.size(); ++i)
         {
             OrbitLight& f = fireflies[i];
-            float a = f.Phase + t * f.Speed;
+            float a = f.Phase + t * f.Speed * fireflySpeed;
             f.Light.Position = math::vec3(std::cos(a) * f.Radius, f.Height + std::sin(t * 1.3f + f.Phase) * f.Bob, std::sin(a) * f.Radius);
         }
 
@@ -527,9 +551,9 @@ int main(int argc, char *argv[])
         }
 
         // gyroscope rings and plasma orb
-        gyroOuter->SetRotation(math::vec4(math::vec3(1.0f, 0.0f, 0.0f), t * 0.7f));
-        gyroMiddle->SetRotation(math::vec4(math::vec3(0.0f, 1.0f, 0.0f), t * 1.1f));
-        gyroInner->SetRotation(math::vec4(math::vec3(1.0f, 0.0f, 0.0f), t * 1.6f));
+        gyroOuter->SetRotation(math::vec4(math::vec3(1.0f, 0.0f, 0.0f), t * 0.7f * gyroSpeed));
+        gyroMiddle->SetRotation(math::vec4(math::vec3(0.0f, 1.0f, 0.0f), t * 1.1f * gyroSpeed));
+        gyroInner->SetRotation(math::vec4(math::vec3(1.0f, 0.0f, 0.0f), t * 1.6f * gyroSpeed));
         matPlasmaOrb->SetFloat("Time", t);
 
         // push render commands
@@ -558,9 +582,28 @@ int main(int argc, char *argv[])
             firstMouse = true;
         }
 
-        // GUI
+        // GUI: the showcase window plus the engine's own renderer window
         if (renderGUI)
         {
+            ImGui::Begin("Foundry Yard");
+            ImGui::Text("Time of day");
+            ImGui::RadioButton("Day", &timeOfDay, 0);   ImGui::SameLine();
+            ImGui::RadioButton("Dusk", &timeOfDay, 1);  ImGui::SameLine();
+            ImGui::RadioButton("Night", &timeOfDay, 2);
+            ImGui::Separator();
+            ImGui::Checkbox("Cinematic camera (C)", &cinematic);
+            ImGui::Checkbox("Light show: 128 lights (L)", &lightShow);
+            ImGui::SliderFloat("Gyroscope speed", &gyroSpeed, 0.0f, 3.0f);
+            ImGui::SliderFloat("Firefly speed", &fireflySpeed, 0.0f, 3.0f);
+            ImGui::SliderFloat("Lantern flicker", &lanternFlicker, 0.0f, 2.0f);
+            ImGui::Separator();
+            ImGui::Checkbox("Custom post: invert (1)", &postInvert);
+            ImGui::Checkbox("Custom post: blue tint (2)", &postBlueTint);
+            ImGui::Separator();
+            int activeLights = 1 + (int)lanterns.size() + (int)fireflies.size() + (lightShow ? (int)showLights.size() : 0);
+            ImGui::Text("Active lights: %d   Scene nodes: %d", activeLights, (int)renderables.size() + 3);
+            ImGui::End();
+
             T1::RenderGUI();
         }
 
