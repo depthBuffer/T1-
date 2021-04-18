@@ -33,6 +33,8 @@ bool firstMouse    = true;
 // showcase state (driven by hotkeys and the "Foundry Yard" GUI window)
 bool  cinematic      = false;
 bool  lightShow      = false;
+bool  postInvert     = false;
+bool  postBlueTint   = false;
 int   timeOfDay      = 1;     // 0 = day, 1 = dusk, 2 = night
 
 struct SunPreset
@@ -347,6 +349,12 @@ int main(int argc, char *argv[])
     background->SetCubemap(renderer->GetSkypCature()->Prefiltered);
     background->Material->SetFloat("lodLevel", 1.5f);
 
+    // custom post-processing shaders shipped with the engine (colour invert and blue tint)
+    T1::Shader*   postInvertShader   = T1::Resources::LoadShader("postprocessing1", "shaders/screen_quad.vs", "shaders/custom_post_1.fs");
+    T1::Shader*   postBlueTintShader = T1::Resources::LoadShader("postprocessing2", "shaders/screen_quad.vs", "shaders/custom_post_2.fs");
+    T1::Material* matPostInvert      = renderer->CreatePostProcessingMaterial(postInvertShader);
+    T1::Material* matPostBlueTint    = renderer->CreatePostProcessingMaterial(postBlueTintShader);
+
     /*
 
       Lighting. Light objects are referenced by pointer from the renderer, so all containers are
@@ -438,6 +446,8 @@ int main(int argc, char *argv[])
         if (pressedOnce(GLFW_KEY_C))   cinematic    = !cinematic;
         if (pressedOnce(GLFW_KEY_L))   lightShow    = !lightShow;
         if (pressedOnce(GLFW_KEY_N))   timeOfDay    = (timeOfDay + 1) % 3;
+        if (pressedOnce(GLFW_KEY_1))   postInvert   = !postInvert;
+        if (pressedOnce(GLFW_KEY_2))   postBlueTint = !postBlueTint;
 
         // camera
         if (cinematic)
@@ -533,6 +543,9 @@ int main(int argc, char *argv[])
         renderer->PushRender(gyroInner->Mesh,  gyroInner->Material,  gyroInner->GetTransform(),  gyroInner->GetPrevTransform());
 
         renderer->PushRender(background);
+
+        if (postInvert)   renderer->PushPostProcessor(matPostInvert);
+        if (postBlueTint) renderer->PushPostProcessor(matPostBlueTint);
 
         renderer->RenderPushedCommands();
 
