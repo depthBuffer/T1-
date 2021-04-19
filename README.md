@@ -73,9 +73,25 @@ Builds on Ubuntu 20.04 (GCC 9, CMake 3.16). GLFW needs the X11 development heade
     cd build
     cmake .. -DCMAKE_BUILD_TYPE=Release
     make -j4
-    ./demo
+    ./demo        # or ./foundry
 
-Controls: `WASD`/arrows move, `Q`/`E` down/up, mouse to look, `Tab` toggles the GUI.
+Demos
+------
+Both demos are built by default and must run with `build/` as the working directory
+(to switch demos, right-click the project in Visual Studio → *Set as Startup Project*).
+
+* **`demo`** — the Sponza atrium with torches, a plasma orb and baked irradiance probes.
+* **`foundry`** — *Foundry Yard*: an industrial yard built from the engine's procedural meshes and
+  bundled textures. A gallery of PBR materials (gold, copper, plastic, rusted metal, glass,
+  checker) on lantern-lit pedestals, a spinning gold/copper/plastic gyroscope around a plasma orb,
+  walls of stacked crates, orbiting firefly lights, a day/dusk/night sun with shadows, and an
+  optional 128-light show for the deferred renderer.
+
+  Start-up flags: `--cinematic` (orbiting presentation camera), `--lightshow`, `--day`, `--night`.
+
+Controls (both demos): `WASD`/arrows move, `Q`/`E` down/up, mouse to look, `Tab` toggles the GUI.
+Foundry Yard also has: `C` cinematic camera, `N` cycle day/dusk/night, `L` light show,
+`1`/`2` custom post-processing (invert / blue tint), plus a *Foundry Yard* GUI panel.
 
 Credits
 ------

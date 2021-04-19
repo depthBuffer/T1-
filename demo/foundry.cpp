@@ -167,6 +167,18 @@ void GenerateTangents(T1::Mesh& mesh)
 
 int main(int argc, char *argv[])
 {
+    // optional start-up flags: --cinematic starts in the orbiting presentation camera,
+    // --lightshow enables the 128-light show, --day / --night select the initial time of day
+    // (default is dusk)
+    for (int i = 1; i < argc; ++i)
+    {
+        std::string arg = argv[i];
+        if (arg == "--cinematic") cinematic = true;
+        if (arg == "--lightshow") lightShow = true;
+        if (arg == "--day")       timeOfDay = 0;
+        if (arg == "--night")     timeOfDay = 2;
+    }
+
     /*
 
       Window and context setup; identical to the main demo. T1 expects an OpenGL 4.3 core
