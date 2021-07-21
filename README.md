@@ -1,6 +1,6 @@
 T1 - Graphics Engine
 ======
-This is a Graphics Engine built in C++, OpenGL, CMake. This takes heavy inspiration from https://github.com/JoeyDeVries/Cell.  
+This is a Graphics Renderer built with C++, OpenGL, CMake.  
 
 Feature List 
 ------
